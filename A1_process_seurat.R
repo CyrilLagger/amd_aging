@@ -16,6 +16,9 @@ library(CellChat)
 library(data.table)
 library(ggplot2)
 library(future)
+library(ComplexUpset)
+library(escape)
+library(ggVennDiagram)
 
 ## Options ####
 
@@ -37,7 +40,7 @@ amd_seurat <- readRDS(
 )
 amd_seurat
 
-## Rescale data to make the object lighter ####
+## Rescale data to make the object ligther ####
 
 amd_seurat <- ScaleData(amd_seurat)
 
@@ -101,4 +104,31 @@ amd_md_summary_ct <- amd_md[
   by = c("cell_type", "age", "sex", "condition", "location")
 ]
 
+## DimPlots ####
+
+DimPlot(
+  amd_seurat,
+  reduction = "umap",
+  label = TRUE
+)
+DimPlot(
+  amd_seurat,
+  reduction = "umap",
+  group.by = "sex"
+)
+DimPlot(
+  amd_seurat,
+  reduction = "umap",
+  group.by = "age"
+)
+DimPlot(
+  amd_seurat,
+  reduction = "umap",
+  group.by = "condition"
+)
+DimPlot(
+  amd_seurat,
+  reduction = "umap",
+  group.by = "location"
+)
 
