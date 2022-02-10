@@ -62,7 +62,7 @@ senref_overlap <- ggVennDiagram::process_data(
     list(
       "MayoClinic" = senref_mayo$gene,
       "Kasit_UP" = senref_kasit_up$gene,
-      #"Kasit_DOWN" = senref_kasit_down$gene,
+      # "Kasit_DOWN" = senref_kasit_down$gene,
       "REACTOME" = senref_reactome$gene,
       "Seurat" = rownames(amd_seurat)
     )
@@ -154,46 +154,50 @@ amd_seurat <- AddModuleScore(
   features = list(sen = senref_reactome$gene),
   name = "score_seurat_reactome"
 )
+amd_seurat <- AddModuleScore(
+  amd_seurat,
+  features = list(sen = senref_combined$gene),
+  name = "score_seurat_combined"
+)
 amd_seurat$score_seurat_mayo1
-amd_seurat$score_seurat_kasit1
+amd_seurat$score_seurat_kasit_up1
+amd_seurat$score_seurat_kasit_down1
 amd_seurat$score_seurat_reactome1
+amd_seurat$score_seurat_combined1
 
 ## Score with enrichIt ####
 
 sen_enrichit <- enrichIt(
   obj = amd_seurat,
-  gene.sets = list(sen = senref_mayo$gene),
+  gene.sets = list(
+    score_it_mayo = senref_mayo$gene,
+    score_it_kasit_up = senref_kasit_up$gene,
+    score_it_kasit_down = senref_kasit_down$gene,
+    score_it_reactome = senref_reactome$gene,
+    score_it_combined = senref_combined$gene
+  ),
   groups = 1000,
   cores = 20
 )
-sen_nes
-amd_seurat$score_gsea_mayo <- sen_nes
-amd_seurat$score_gsea_mayo_top20pct <- ifelse(
-  amd_seurat$score_gsea_mayo >= quantile(amd_seurat$score_gsea_mayo, 0.5),
-  TRUE,
-  FALSE
-)
+# TODO
+# amd_seurat$score_gsea_mayo <- sen_nes
 
-
+## Correlations between scores ####
 
 cor(
   amd_seurat$score_seurat_mayo1,
-  amd_seurat$score_seurat_kasit1
+  amd_seurat$score_seurat_kasit_up1
 )
 cor(
   amd_seurat$score_seurat_mayo1,
   amd_seurat$score_seurat_reactome1
 )
-
 cor(
   amd_seurat$score_seurat_reactome1,
-  amd_seurat$score_seurat_kasit1
+  amd_seurat$score_seurat_kasit_up1
 )
 
-amd_seurat$is_rpe <- ifelse(
-  amd_seurat$cell_type == "RPE", TRUE, FALSE
-)
-table(amd_seurat$is_rpe)
+## Plot scores ####
 
 ggplot(
   amd_seurat[[]],
@@ -212,7 +216,7 @@ ggplot(
 ggplot(
   amd_seurat[[]],
   aes(
-    x = score_seurat_kasit1,
+    x = score_seurat_kasit_up1,
     color = cell_type,
     fill = cell_type
   )
@@ -223,25 +227,87 @@ ggplot(
     alpha = 0.3
   )
 
-p <- ggplot(
+ggplot(
   amd_seurat[[]],
   aes(
-    x = score_seurat_kasit1,
+    x = score_seurat_combined1,
+    color = cell_type,
+    fill = cell_type
+  )
+) +
+  geom_histogram(
+    bins = 50,
+    position = "identity",
+    alpha = 0.3
+  )
+
+sen_score_km_plot <- ggplot(
+  amd_seurat[[]],
+  aes(
+    x = score_seurat_kasit_up1,
     y = score_seurat_mayo1,
     color = is_rpe
   )
 ) +
   geom_point()
-p <- ggMarginal(
-  p,
+sen_score_km_plot <- ggMarginal(
+  sen_score_km_plot,
   groupColour = TRUE,
   groupFill = TRUE
 )
 ggsave(
-  "../results/score_mayo_vs_kasit_rpe.png",
-  p
+  paste0(
+    path_results,
+    "images/B1_sen_score_km.png"
+  ),
+  sen_score_km_plot
 )
 
+sen_score_kc_plot <- ggplot(
+  amd_seurat[[]],
+  aes(
+    x = score_seurat_kasit_up1,
+    y = score_seurat_combined1,
+    color = is_rpe
+  )
+) +
+  geom_point()
+sen_score_kc_plot <- ggMarginal(
+  sen_score_kc_plot,
+  groupColour = TRUE,
+  groupFill = TRUE
+)
+ggsave(
+  paste0(
+    path_results,
+    "images/B1_sen_score_kc.png"
+  ),
+  sen_score_kc_plot
+)
+
+sen_score_k_updown_plot <- ggplot(
+  amd_seurat[[]],
+  aes(
+    x = score_seurat_kasit_up1,
+    y = score_seurat_kasit_down1,
+    color = is_rpe
+  )
+) +
+  geom_point()
+sen_score_k_updown_plot <- ggMarginal(
+  sen_score_k_updown_plot,
+  groupColour = TRUE,
+  groupFill = TRUE
+)
+ggsave(
+  paste0(
+    path_results,
+    "images/B1_sen_score_k_updown.png"
+  ),
+  sen_score_k_updown_plot
+)
+
+## Find appropriate cutoff ####
 
 table(
   amd_seurat$cell_type,
@@ -250,182 +316,35 @@ table(
 )
 table(
   amd_seurat$cell_type,
-  amd_seurat$score_seurat_kasit1 >=
-    quantile(amd_seurat$score_seurat_kasit1, 0.8)
-)
-
-amd_seurat$score_seurat_kasit_20pct <- ifelse(
-  amd_seurat$score_seurat_kasit1 >= quantile(amd_seurat$score_seurat_kasit1, 0.8),
-  TRUE,
-  FALSE
-)
-
-amd_seurat$score_seurat_mayo_top50pct <- ifelse(
-  amd_seurat$score_seurat_mayo1 >= quantile(amd_seurat$score_seurat_mayo1, 0.5),
-  TRUE,
-  FALSE
-)
-
-
-amd_seurat$score_seurat_kasit1
-amd_seurat$score_seurat_kasit_top20pct <- ifelse(
-  amd_seurat$score_seurat_kasit1 >= quantile(amd_seurat$score_seurat_kasit1, 0.5),
-  TRUE,
-  FALSE
-)
-
-amd_seurat <- AddModuleScore(
-  amd_seurat,
-  features = list(sen = senref_kasit_down$gene),
-  name = "score_seurat_senref_kasit_down"
-)
-
-
-amd_seurat$score_seurat_reactome1
-amd_seurat$score_seurat_reactome_top20pct <- ifelse(
-  amd_seurat$score_seurat_reactome1 >= quantile(amd_seurat$score_seurat_reactome1, 0.5),
-  TRUE,
-  FALSE
+  amd_seurat$score_seurat_kasit_up1 >=
+    quantile(amd_seurat$score_seurat_kasit_up1, 0.8)
 )
 
 table(
-  amd_seurat$score_seurat_mayo_top20pct,
-  amd_seurat$score_gsea_mayo_top20pct
+  amd_seurat$cell_type,
+  amd_seurat$score_seurat_combined1 >=
+    quantile(amd_seurat$score_seurat_combined1, 0.8)
 )
 
-table(
-  amd_seurat$score_seurat_mayo_top20pct,
-  amd_seurat$score_seurat_reactome_top20pct
+amd_seurat$sen_kasit_up_20pct <- ifelse(
+  amd_seurat$score_seurat_kasit_up1 >=
+    quantile(amd_seurat$score_seurat_kasit_up1, 0.8),
+  TRUE,
+  FALSE
 )
+table(amd_seurat$sen_kasit_up_20pct)
+
+## Rename cell types based on senesence scores ####
 
 ftable(
-  amd_seurat$cell_type,
-  amd_seurat$score_seurat_mayo_top20pct,
-  amd_seurat$score_seurat_reactome_top20pct,
-  amd_seurat$score_seurat_kasit_top20pct
+  amd_seurat$age,
+  amd_seurat$sen_kasit_up_20pct,
+  amd_seurat$cell_type
 )
 
-ftable(
-  amd_seurat$cell_type,
-  amd_seurat$score_seurat_mayo_top20pct,
-  amd_seurat$score_seurat_kasit_top20pct
+amd_seurat$cell_type_sen_k20 <- ifelse(
+  amd_seurat$sen_kasit_up_20pct == TRUE,
+  paste0(amd_seurat$cell_type, "_sen"),
+  paste0(amd_seurat$cell_type, "")
 )
-
-ftable(
-  amd_seurat$cell_type,
-  amd_seurat$score_seurat_kasit_top20pct
-)
-
-cor(
-  amd_seurat$score_gsea_mayo,
-  amd_seurat$score_seurat_mayo1,
-  method = "spearman"
-)
-cor(
-  amd_seurat$score_seurat_kasit1,
-  amd_seurat$score_seurat_mayo1,
-  method = "spearman"
-)
-cor(
-  amd_seurat$score_seurat_kasit1,
-  amd_seurat$score_gsea_mayo,
-  method = "spearman"
-)
-cor(
-  amd_seurat$score_seurat_mayo1,
-  amd_seurat$score_seurat_reactome1,
-  method = "spearman"
-)
-cor(
-  amd_seurat$score_seurat_kasit1,
-  amd_seurat$score_seurat_reactome1,
-  method = "spearman"
-)
-
-
-ggplot(
-  amd_seurat[[]],
-  aes(
-    x = score_gsea_mayo,
-    fill = cell_type,
-    color = cell_type
-  )
-) +
-  geom_histogram(
-    aes(y = ..density..),
-    position = "identity",
-    alpha = 0.4,
-    bins = 50
-  )
-
-
-
-
-ggplot(
-  amd_seurat[[]],
-  aes(
-    x = score_gsea_mayo,
-    y = score_seurat_mayo1
-  )
-) +
-  geom_point()
-
-ggplot(
-  amd_seurat[[]],
-  aes(
-    x = score_seurat_kasit1,
-    y = score_seurat_senref_kasit_down1
-  )
-) +
-  geom_point()
-
-
-ggplot(
-  amd_seurat[[]],
-  aes(
-    x = score_seurat_reactome1,
-    y = score_seurat_mayo1
-  )
-) +
-  geom_point()
-
-
-ggplot(
-  amd_seurat[[]],
-  aes(
-    x = score_seurat_reactome1,
-    y = score_seurat_kasit1,
-    color = is_rpe
-  )
-) +
-  geom_point()
-
-
-amd_seurat$is_rpe <- ifelse(
-  amd_seurat$cell_type == "RPE", TRUE, FALSE
-)
-table(amd_seurat$is_rpe)
-
-ggplot(
-  amd_seurat[[]],
-  aes(
-    x = score_seurat_mayo1,
-    y = score_seurat_kasit1
-  )
-) +
-  geom_point()
-
-ggplot(
-  amd_seurat[[]],
-  aes(
-    x = score_gsea_mayo,
-    fill = age,
-    color = age
-  )
-) +
-  geom_histogram(
-    aes(y = ..density..),
-    position = "identity",
-    alpha = 0.4,
-    bins = 50
-  )
+table(amd_seurat$cell_type_sen_k20)
