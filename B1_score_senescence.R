@@ -165,6 +165,9 @@ amd_seurat$score_seurat_kasit_down1
 amd_seurat$score_seurat_reactome1
 amd_seurat$score_seurat_combined1
 
+amd_seurat$score_seurat_kasit_updown <- amd_seurat$score_seurat_kasit_up1 -
+  amd_seurat$score_seurat_kasit_down1
+
 ## Score with enrichIt ####
 
 sen_enrichit <- enrichIt(
@@ -312,12 +315,18 @@ ggsave(
 table(
   amd_seurat$cell_type,
   amd_seurat$score_seurat_mayo1 >=
-    quantile(amd_seurat$score_seurat_mayo1, 0.5)
+    quantile(amd_seurat$score_seurat_mayo1, 0.8)
 )
 table(
   amd_seurat$cell_type,
   amd_seurat$score_seurat_kasit_up1 >=
     quantile(amd_seurat$score_seurat_kasit_up1, 0.8)
+)
+
+table(
+  amd_seurat$cell_type,
+  amd_seurat$score_seurat_kasit_updown >=
+    quantile(amd_seurat$score_seurat_kasit_updown, 0.8)
 )
 
 table(
@@ -334,17 +343,24 @@ amd_seurat$sen_kasit_up_20pct <- ifelse(
 )
 table(amd_seurat$sen_kasit_up_20pct)
 
-## Rename cell types based on senesence scores ####
-
+amd_seurat$sen_kasit_updown_20pct <- ifelse(
+  amd_seurat$score_seurat_kasit_updown >=
+    quantile(amd_seurat$score_seurat_kasit_updown, 0.8),
+  TRUE,
+  FALSE
+)
+table(amd_seurat$sen_kasit_updown_20pct)
 ftable(
   amd_seurat$age,
-  amd_seurat$sen_kasit_up_20pct,
+  amd_seurat$sen_kasit_updown_20pct,
   amd_seurat$cell_type
 )
 
-amd_seurat$cell_type_sen_k20 <- ifelse(
-  amd_seurat$sen_kasit_up_20pct == TRUE,
+## Rename cell types based on senesence scores ####
+
+amd_seurat$cell_type_senescence <- ifelse(
+  amd_seurat$sen_kasit_updown_20pct == TRUE,
   paste0(amd_seurat$cell_type, "_sen"),
   paste0(amd_seurat$cell_type, "")
 )
-table(amd_seurat$cell_type_sen_k20)
+table(amd_seurat$cell_type_senescence)
