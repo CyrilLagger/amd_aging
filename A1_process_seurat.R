@@ -19,11 +19,12 @@ library(future)
 library(ComplexUpset)
 library(escape)
 library(ggVennDiagram)
+library(ggExtra)
+library(limma)
 
 ## Options ####
 
-plan(sequential)
-#plan(multisession, workers = 2)
+plan(multisession, workers = 20)
 
 ## Directory paths ####
 
@@ -40,7 +41,7 @@ amd_seurat <- readRDS(
 )
 amd_seurat
 
-## Rescale data to make the object ligther ####
+## Rescale data to make the object lighter ####
 
 amd_seurat <- ScaleData(amd_seurat)
 
@@ -49,6 +50,7 @@ GetAssayData(amd_seurat, slot = "counts")[1:5, 1:5]
 head(rownames(amd_seurat))
 
 ## Understand the meta.data ####
+
 # TODO ask why this strange convention is used
 
 table(amd_seurat$AB) # cell type
@@ -91,6 +93,9 @@ amd_seurat$age <- amd_seurat$H
 amd_seurat$sex <- amd_seurat$F
 amd_seurat$condition <- amd_seurat$N
 amd_seurat$location <- amd_seurat$X
+amd_seurat$is_rpe <- ifelse(
+  amd_seurat$cell_type == "RPE", TRUE, FALSE
+)
 
 ## Extract informative meta.data in data.table ####
 
@@ -131,4 +136,3 @@ DimPlot(
   reduction = "umap",
   group.by = "location"
 )
-
