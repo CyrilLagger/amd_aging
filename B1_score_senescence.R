@@ -288,28 +288,6 @@ ggsave(
   sen_score_kc_plot
 )
 
-sen_score_k_updown_plot <- ggplot(
-  amd_seurat[[]],
-  aes(
-    x = score_seurat_kasit_up1,
-    y = score_seurat_kasit_down1,
-    color = is_rpe
-  )
-) +
-  geom_point()
-sen_score_k_updown_plot <- ggMarginal(
-  sen_score_k_updown_plot,
-  groupColour = TRUE,
-  groupFill = TRUE
-)
-ggsave(
-  paste0(
-    path_results,
-    "images/B1_sen_score_k_updown.png"
-  ),
-  sen_score_k_updown_plot
-)
-
 ## Find appropriate cutoff ####
 
 table(
@@ -364,3 +342,164 @@ amd_seurat$cell_type_senescence <- ifelse(
   paste0(amd_seurat$cell_type, "")
 )
 table(amd_seurat$cell_type_senescence)
+
+## Plots for article ####
+
+sen_score_k_updown_plot <- ggplot(
+  amd_seurat[[]],
+  aes(
+    x = score_seurat_kasit_up1,
+    y = score_seurat_kasit_down1
+  )
+) + geom_point(
+  ) + xlab(
+    "Senescence score (up-regulated signatures)"
+  ) + ylab(
+    "Senescence score (down-regulated signatures)"
+  )
+sen_score_k_updown_plot <- ggMarginal(
+  sen_score_k_updown_plot
+)
+ggsave(
+  paste0(
+    path_results,
+    "images/B1_sen_score_k_updown.png"
+  ),
+  sen_score_k_updown_plot
+)
+
+sen_score_k_updown_plot_ct <- ggplot(
+  amd_seurat[[]],
+  aes(
+    x = score_seurat_kasit_up1,
+    y = score_seurat_kasit_down1,
+    color = cell_type
+  )
+) +
+  geom_point(
+  ) + xlab(
+    "Senescence score (up-regulated signatures)"
+  ) + ylab(
+    "Senescence score (down-regulated signatures)"
+  ) + labs(
+    color = "Cell type"
+  )
+sen_score_k_updown_plot_ct <- ggMarginal(
+  sen_score_k_updown_plot_ct,
+  groupColour = TRUE,
+  groupFill = TRUE
+)
+ggsave(
+  paste0(
+    path_results,
+    "images/B1_sen_score_k_updown_ct.png"
+  ),
+  sen_score_k_updown_plot_ct
+)
+
+sen_score_k_updown_plot_rpe <- ggplot(
+  amd_seurat[[]],
+  aes(
+    x = score_seurat_kasit_up1,
+    y = score_seurat_kasit_down1,
+    color = is_rpe
+  )
+) +
+  geom_point(
+  ) + xlab(
+    "Senescence score (up-regulated signatures)"
+  ) + ylab(
+    "Senescence score (down-regulated signatures)"
+  ) + labs(
+    color = "RPE"
+  )
+sen_score_k_updown_plot_rpe <- ggMarginal(
+  sen_score_k_updown_plot_rpe,
+  groupColour = TRUE,
+  groupFill = TRUE
+)
+ggsave(
+  paste0(
+    path_results,
+    "images/B1_sen_score_k_updown_rpe.png"
+  ),
+  sen_score_k_updown_plot_rpe
+)
+
+sen_score_k_updown_hist <- ggplot(
+  amd_seurat[[]],
+  aes(
+    x = score_seurat_kasit_updown
+  )
+) + geom_histogram(
+  bins = 50,
+  alpha = 0.5
+) + geom_vline(
+  xintercept = quantile(amd_seurat$score_seurat_kasit_updown, 0.8)
+) + xlab(
+  "Senescence score (up - down signatures)"
+)
+ggsave(
+  paste0(
+    path_results,
+    "images/B1_sen_score_k_updown_hist.png"
+  ),
+  sen_score_k_updown_hist
+)
+
+sen_score_k_updown_hist_ct <- ggplot(
+  amd_seurat[[]],
+  aes(
+    x = score_seurat_kasit_updown,
+    color = cell_type,
+    fill = cell_type
+  )
+) + geom_histogram(
+  bins = 50,
+  alpha = 0.5, 
+  position = "identity"
+) + geom_vline(
+  xintercept = quantile(amd_seurat$score_seurat_kasit_updown, 0.8)
+) + xlab(
+  "Senescence score (up - down signatures)"
+)
+ggsave(
+  paste0(
+    path_results,
+    "images/B1_sen_score_k_updown_hist_ct.png"
+  ),
+  sen_score_k_updown_hist_ct
+)
+
+sen_score_k_updown_feature <- FeaturePlot(
+  amd_seurat,
+  features = "score_seurat_kasit_updown",
+  cols = c("yellow", "blue")
+)
+ggsave(
+  paste0(
+    path_results,
+    "images/B1_sen_score_k_updown_feature.png"
+  ),
+  sen_score_k_updown_feature
+)
+
+amd_seurat$senescence_score <- ifelse(
+  amd_seurat$sen_kasit_updown_20pct, "High", "Low"
+)
+
+sen_cut_k_updown_plot <- DimPlot(
+  amd_seurat,
+  reduction = "umap",
+  group.by = "senescence_score",
+  pt.size = 1,
+  order = "High"
+)
+ggsave(
+  paste0(
+    path_results,
+    "images/B1_sen_cut_k_updown.png"
+  ),
+  sen_cut_k_updown_plot
+)
+
