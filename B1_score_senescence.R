@@ -503,3 +503,87 @@ ggsave(
   sen_cut_k_updown_plot
 )
 
+## Some statistical tests ####
+
+amd_seurat$condition_b <- ifelse(
+  amd_seurat$condition == "normal", "Normal", "AMD"
+)
+sen_hist_amd <- ggplot(
+  amd_seurat[[]],
+    aes(
+      x = score_seurat_kasit_updown,
+      color = condition_b,
+      fill = condition_b
+  )
+) + geom_histogram(
+  aes(y = ..density..),
+  bins = 50,
+  position = "identity",
+  alpha = 0.5
+) + geom_density(
+  alpha = 0.1
+) + theme(
+  legend.title = element_blank()
+) + xlab(
+  "Senescence score (up - down signatures)"
+)
+ggsave(
+  paste0(
+    path_results,
+    "images/B1_sen_hist_amd.png"
+  ),
+  sen_hist_amd
+)
+
+sen_boxplot_amd <- ggplot(
+  amd_seurat[[]],
+    aes(
+      x = condition_b,
+      y = score_seurat_kasit_updown
+  )
+) + geom_boxplot(
+) + stat_compare_means(
+) + ylab(
+  "Senescence score (up - down signatures)"
+) + xlab("")
+ggsave(
+  paste0(
+    path_results,
+    "images/B1_sen_boxplot_amd.png"
+  ),
+  sen_boxplot_amd
+)
+
+wilcox.test(
+  amd_seurat[[]][amd_seurat[[]]$condition_b == "Normal",
+  ]$score_seurat_kasit_updown,
+  amd_seurat[[]][amd_seurat[[]]$condition_b == "AMD",
+  ]$score_seurat_kasit_updown,
+)
+
+t.test(
+  amd_seurat[[]][amd_seurat[[]]$condition_b == "Normal" &
+   amd_seurat[[]]$cell_type == "RPE",
+  ]$score_seurat_kasit_updown,
+  amd_seurat[[]][amd_seurat[[]]$condition_b == "AMD"&
+   amd_seurat[[]]$cell_type == "RPE",
+  ]$score_seurat_kasit_updown,
+)
+
+t.test(
+  amd_seurat[[]][amd_seurat[[]]$condition_b == "Normal" &
+   amd_seurat[[]]$cell_type == "fibroblast",
+  ]$score_seurat_kasit_updown,
+  amd_seurat[[]][amd_seurat[[]]$condition_b == "AMD"&
+   amd_seurat[[]]$cell_type == "fibroblast",
+  ]$score_seurat_kasit_updown,
+)
+
+t.test(
+  amd_seurat[[]][amd_seurat[[]]$condition_b == "Normal" &
+   amd_seurat[[]]$cell_type == "endothelial",
+  ]$score_seurat_kasit_updown,
+  amd_seurat[[]][amd_seurat[[]]$condition_b == "AMD"&
+   amd_seurat[[]]$cell_type == "endothelial",
+  ]$score_seurat_kasit_updown,
+)
