@@ -554,7 +554,7 @@ ggsave(
   sen_boxplot_amd
 )
 
-wilcox.test(
+t.test(
   amd_seurat[[]][amd_seurat[[]]$condition_b == "Normal",
   ]$score_seurat_kasit_updown,
   amd_seurat[[]][amd_seurat[[]]$condition_b == "AMD",

@@ -9,7 +9,7 @@
 ##
 
 
-## Load bulk analays (ba) data ###
+## Load bulk analysis (ba) data ####
 
 ba_data <- fread("../data/D1_limma_data.csv")
 
@@ -165,3 +165,36 @@ fwrite(
     icc_ba_relevant,
     "../results/D1_icc_rpe_endo_bulk_aging.csv"
 )
+
+ba_scd_significant
+
+icc_rpe_endo_genes <- unique(
+    unlist(
+    icc_ba[
+    ER_CELLTYPES %in%
+    c("endothelial_RPE", "endothelial_endothelial",
+    "RPE_RPE", "RPE_endothelial"), c(
+                "LIGAND_1", "LIGAND_2",
+                "RECEPTOR_1", "RECEPTOR_2", "RECEPTOR_3"
+            )
+    ]
+    )
+)
+icc_rpe_endo_genes <- icc_rpe_endo_genes[!is.na(icc_rpe_endo_genes)]
+
+ba_scd_significant_detected <- ba_scd_significant[Gene.symbol %in% icc_rpe_endo_genes]
+fwrite(
+    ba_scd_significant_detected,
+    "../results/D1_icc_rpe_endo_bulk_aging_detected.csv"
+)
+
+## Subset aging genes by senescence ####
+
+
+
+table(
+    senref_kasit_up$gene %in% unique(ba_data$Gene.symbol)
+)
+ba_kasit_up <- ba_data[Gene.symbol %in% senref_kasit_up$gene,
+ c("Gene.symbol", "logFC", "P.Value", "adj.P.Val")]
+ba_kasit_up[, bh_value := p.adjust(P.Value, method = "BH")]
