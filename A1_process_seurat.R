@@ -8,7 +8,7 @@
 ####################################################
 ##
 
-## Library ####
+## Libraries ####
 
 library(Seurat)
 library(scDiffCom)
@@ -29,11 +29,12 @@ plan(multisession, workers = 20)
 
 ## Directory paths ####
 
-path_data <- "../data/"
-path_results <- "../results/"
+path_data <- "data/"
+path_results <- "results/"
 
 ## Read Seurat object #####
 
+# the object was prepared on another custom R script
 amd_seurat <- readRDS(
   paste0(
     path_data,
@@ -51,8 +52,6 @@ GetAssayData(amd_seurat, slot = "counts")[1:5, 1:5]
 head(rownames(amd_seurat))
 
 ## Understand the meta.data ####
-
-# TODO ask why this strange convention is used
 
 table(amd_seurat$AB) # cell type
 table(amd_seurat$AD) # cell type
