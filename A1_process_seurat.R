@@ -245,13 +245,6 @@ amd_features <- c(
   "APOD", "PMEL", "CXCR4", "PLP1", "RPE65", "IGKC", "VWF", "TPSB2"
 )
 
-VlnPlot(
-  amd_seurat,
-  features = amd_features,
-  ncol = 2,
-  pt.size = 0
-)
-
 ## Save processed object ####
 
 saveRDS(
@@ -276,5 +269,85 @@ amd_md_summary_ct <- amd_md[
 
 amd_md[, .N, by = c("age", "sex", "condition")]
 
-## Figure 1B ####
+## Data or Figure 1B ####
 
+amd_fig1B <- amd_md[, .N, by = c("cell_type")][order(-N)]
+amd_fig1B[
+  ,
+  pct := N / sum(N)*100
+]
+amd_fig1B
+
+## Figure 1C-D
+
+amd_seurat$condition_abbr <- ifelse(
+  amd_seurat$condition == "normal",
+  "Normal",
+  "AMD"
+)
+
+amd_fig1CD <- cowplot::plot_grid(
+  plotlist = list(
+    DimPlot(
+      amd_seurat,
+      reduction = "umap",
+      group.by = "condition_abbr",
+      pt.size = 0.5
+    ) + ggtitle(""),
+        DimPlot(
+      amd_seurat,
+      label = TRUE
+    ) + ggtitle("") + NoLegend()
+  ),
+  ncol = 1
+)
+
+ggsave(
+  paste0(
+    path_results,
+    "images/Fig1CD.png"
+  ),
+  amd_fig1CD,
+  height = 9,
+  width = 5
+)
+
+## Figure 1E ####
+
+amd_fig1E_list <- VlnPlot(
+  amd_seurat,
+  features = amd_features,
+  ncol = 2,
+  pt.size = 0,
+  combine = FALSE
+)
+amd_fig1E_list <- lapply(
+  amd_fig1E_list,
+  function(i) {
+    i + NoLegend() + theme(
+      axis.text = element_text(size = 12),
+      axis.title = element_text(size = 12),
+      plot.title = element_text(size = 10),
+      plot.margin = unit(c(0.1, 0.1, 0, 0.1), "cm")
+    ) + xlab(
+      ""
+    ) + ylab(
+      "Expression level"
+    )
+  }
+)
+
+amd_fig1E <- cowplot::plot_grid(
+  plotlist = amd_fig1E_list,
+  ncol = 2
+)
+
+ggsave(
+  paste0(
+    path_results,
+    "images/Fig1E.png"
+  ),
+  amd_fig1E,
+  height = 9,
+  width = 5
+)
