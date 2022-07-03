@@ -25,7 +25,7 @@ library(ggpubr)
 
 ## Options ####
 
-plan(multisession, workers = 20)
+plan(multicore, workers = 20)
 
 ## Directory paths ####
 
