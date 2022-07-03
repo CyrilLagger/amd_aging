@@ -50,14 +50,18 @@ table(
     scd_genes %in% unique(ba_data$Gene.symbol)
 )
 ba_scd <- ba_data[Gene.symbol %in% scd_genes,
- c("Gene.symbol", "logFC", "P.Value", "adj.P.Val")]
+                  c("Gene.symbol", "logFC", "P.Value", "adj.P.Val")]
 ba_scd[, bh_value := p.adjust(P.Value, method = "BH")]
 ba_scd_significant <- ba_scd[bh_value <= 0.1 & abs(logFC) >= log2(1.5)/70]
+
+hist(ba_scd$logFC, breaks = 100)
 
 fwrite(
     ba_scd_significant,
     "../results/D1_bulk_aging_deg_scd.csv"
 )
+
+unique(ba_scd_significant$Gene.symbol)
 
 ba_scd_up <- unique(
     ba_scd_significant[logFC >= 0]$Gene.symbol
@@ -66,13 +70,74 @@ ba_scd_down <- unique(
     ba_scd_significant[logFC <= 0]$Gene.symbol
 )
 
+table(
+    unique(ba_scd_up) %in% unique(
+        unlist(
+            cci_scd_healthy[, c("LIGAND_1", "LIGAND_2", "RECEPTOR_1", "RECEPTOR_2", "RECEPTOR_3")]
+        )
+    ) | unique(ba_scd_up) %in% unique(
+        unlist(
+            cci_scd_amd[, c("LIGAND_1", "LIGAND_2", "RECEPTOR_1", "RECEPTOR_2", "RECEPTOR_3")]
+        )
+    )
+)
+
+table(
+    unique(ba_scd_down) %in% unique(
+        unlist(
+            cci_scd_healthy[, c("LIGAND_1", "LIGAND_2", "RECEPTOR_1", "RECEPTOR_2", "RECEPTOR_3")]
+        )
+    ) | unique(ba_scd_down) %in% unique(
+        unlist(
+            cci_scd_amd[, c("LIGAND_1", "LIGAND_2", "RECEPTOR_1", "RECEPTOR_2", "RECEPTOR_3")]
+        )
+    )
+)
+
+ba_final_up <- sort(unique(ba_scd_up)[
+    unique(ba_scd_up) %in% unique(
+        unlist(
+            cci_scd_healthy[, c("LIGAND_1", "LIGAND_2", "RECEPTOR_1", "RECEPTOR_2", "RECEPTOR_3")]
+        )
+    ) | unique(ba_scd_up) %in% unique(
+        unlist(
+            cci_scd_amd[, c("LIGAND_1", "LIGAND_2", "RECEPTOR_1", "RECEPTOR_2", "RECEPTOR_3")]
+        )
+    )
+])
+
+fwrite(
+    ba_scd_significant[Gene.symbol %in% ba_final_up][, -4],
+    "../../../../../deg_scd_up.csv"
+)
+
+ba_final_down <- sort(unique(ba_scd_down)[
+    unique(ba_scd_down) %in% unique(
+        unlist(
+            cci_scd_healthy[, c("LIGAND_1", "LIGAND_2", "RECEPTOR_1", "RECEPTOR_2", "RECEPTOR_3")]
+        )
+    ) | unique(ba_scd_down) %in% unique(
+        unlist(
+            cci_scd_amd[, c("LIGAND_1", "LIGAND_2", "RECEPTOR_1", "RECEPTOR_2", "RECEPTOR_3")]
+        )
+    )
+])
+
+fwrite(
+    ba_scd_significant[Gene.symbol %in% ba_final_down][, -4],
+    "../../../../../deg_scd_down.csv"
+)
+
+ba_final_up %in% cci_cellchat_healthy$LIGAND_1
+ba_final_up %in% cci_cellchat_healthy$RECEPTOR_2
+
 ## Subset aging genes by CellChat ####
 
 table(
     cc_genes %in% unique(ba_data$Gene.symbol)
 )
 ba_cc <- ba_data[Gene.symbol %in% cc_genes,
- c("Gene.symbol", "logFC", "P.Value", "adj.P.Val")]
+                 c("Gene.symbol", "logFC", "P.Value", "adj.P.Val")]
 ba_cc[, bh_value := p.adjust(P.Value, method = "BH")]
 ba_cc_significant <- ba_cc[bh_value <= 0.1 & abs(logFC) >= log2(1.5)/70]
 
@@ -148,16 +213,16 @@ icc_ba[
 
 icc_ba_relevant <- icc_ba[
     ER_CELLTYPES %in%
-    c("endothelial_RPE", "endothelial_endothelial",
-    "RPE_RPE", "RPE_endothelial") &
-    (LIGAND_1_UP | LIGAND_2_UP | LIGAND_1_DOWN | LIGAND_2_DOWN |
-    RECEPTOR_1_UP | RECEPTOR_2_UP | RECEPTOR_3_UP |
-    RECEPTOR_1_DOWN | RECEPTOR_2_DOWN | RECEPTOR_3_DOWN)
+        c("endothelial_RPE", "endothelial_endothelial",
+          "RPE_RPE", "RPE_endothelial") &
+        (LIGAND_1_UP | LIGAND_2_UP | LIGAND_1_DOWN | LIGAND_2_DOWN |
+             RECEPTOR_1_UP | RECEPTOR_2_UP | RECEPTOR_3_UP |
+             RECEPTOR_1_DOWN | RECEPTOR_2_DOWN | RECEPTOR_3_DOWN)
 ][, c("LRI", "ER_CELLTYPES", "CCI_SCORE",
-"EMITTER_CELLTYPE", "RECEIVER_CELLTYPE", 
-"LIGAND_1_UP", "LIGAND_2_UP" , "LIGAND_1_DOWN" , "LIGAND_2_DOWN" ,
-    "RECEPTOR_1_UP" , "RECEPTOR_2_UP" , "RECEPTOR_3_UP" ,
-    "RECEPTOR_1_DOWN" , "RECEPTOR_2_DOWN" , "RECEPTOR_3_DOWN"
+      "EMITTER_CELLTYPE", "RECEIVER_CELLTYPE", 
+      "LIGAND_1_UP", "LIGAND_2_UP" , "LIGAND_1_DOWN" , "LIGAND_2_DOWN" ,
+      "RECEPTOR_1_UP" , "RECEPTOR_2_UP" , "RECEPTOR_3_UP" ,
+      "RECEPTOR_1_DOWN" , "RECEPTOR_2_DOWN" , "RECEPTOR_3_DOWN"
 )
 ]
 
@@ -170,14 +235,14 @@ ba_scd_significant
 
 icc_rpe_endo_genes <- unique(
     unlist(
-    icc_ba[
-    ER_CELLTYPES %in%
-    c("endothelial_RPE", "endothelial_endothelial",
-    "RPE_RPE", "RPE_endothelial"), c(
-                "LIGAND_1", "LIGAND_2",
-                "RECEPTOR_1", "RECEPTOR_2", "RECEPTOR_3"
-            )
-    ]
+        icc_ba[
+            ER_CELLTYPES %in%
+                c("endothelial_RPE", "endothelial_endothelial",
+                  "RPE_RPE", "RPE_endothelial"), c(
+                      "LIGAND_1", "LIGAND_2",
+                      "RECEPTOR_1", "RECEPTOR_2", "RECEPTOR_3"
+                  )
+        ]
     )
 )
 icc_rpe_endo_genes <- icc_rpe_endo_genes[!is.na(icc_rpe_endo_genes)]
@@ -196,5 +261,5 @@ table(
     senref_kasit_up$gene %in% unique(ba_data$Gene.symbol)
 )
 ba_kasit_up <- ba_data[Gene.symbol %in% senref_kasit_up$gene,
- c("Gene.symbol", "logFC", "P.Value", "adj.P.Val")]
+                       c("Gene.symbol", "logFC", "P.Value", "adj.P.Val")]
 ba_kasit_up[, bh_value := p.adjust(P.Value, method = "BH")]

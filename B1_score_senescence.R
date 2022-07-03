@@ -571,6 +571,25 @@ ggplot(
   "ssGSEA senescence score"
 ) + facet_wrap(vars(cell_type))
 
+## important one 
+
+ggplot(
+  amd_seurat[[]],
+  aes(
+    x = score_gsea_kasit_updown
+  )
+) + geom_histogram(
+  color = "blue",
+  bins = 70,
+  alpha = 0.3,
+) + geom_vline(
+  xintercept = quantile(amd_seurat$score_gsea_kasit_updown, 0.8)
+) + xlab(
+  "ssGSEA senescence score"
+) + facet_wrap(vars(cell_type))
+
+##
+
 sen_score_k_updown_plot <- ggplot(
   amd_seurat[[]],
   aes(
@@ -736,10 +755,10 @@ amd_seurat$condition_b <- ifelse(
 )
 sen_hist_amd <- ggplot(
   amd_seurat[[]],
-    aes(
-      x = score_seurat_kasit_updown,
-      color = condition_b,
-      fill = condition_b
+  aes(
+    x = score_seurat_kasit_updown,
+    color = condition_b,
+    fill = condition_b
   )
 ) + geom_histogram(
   aes(y = ..density..),
@@ -763,9 +782,9 @@ ggsave(
 
 sen_boxplot_amd <- ggplot(
   amd_seurat[[]],
-    aes(
-      x = condition_b,
-      y = score_seurat_kasit_updown
+  aes(
+    x = condition_b,
+    y = score_seurat_kasit_updown
   )
 ) + geom_boxplot(
 ) + stat_compare_means(
@@ -789,25 +808,25 @@ t.test(
 
 t.test(
   amd_seurat[[]][amd_seurat[[]]$condition_b == "Normal" &
-   amd_seurat[[]]$cell_type == "RPE",
+                   amd_seurat[[]]$cell_type == "RPE",
   ]$score_seurat_kasit_updown,
   amd_seurat[[]][amd_seurat[[]]$condition_b == "AMD"&
-   amd_seurat[[]]$cell_type == "RPE",
+                   amd_seurat[[]]$cell_type == "RPE",
   ]$score_seurat_kasit_updown,
 )
 
 t.test(
   amd_seurat[[]][amd_seurat[[]]$condition_b == "Normal" &
-   amd_seurat[[]]$cell_type == "fibroblast",
+                   amd_seurat[[]]$cell_type == "fibroblast",
   ]$score_seurat_kasit_updown,
   amd_seurat[[]][amd_seurat[[]]$condition_b == "AMD"&
-   amd_seurat[[]]$cell_type == "fibroblast",
+                   amd_seurat[[]]$cell_type == "fibroblast",
   ]$score_seurat_kasit_updown,
 )
 
 t.test(
   amd_seurat[[]][amd_seurat[[]]$condition_b == "Normal" &
-   amd_seurat[[]]$cell_type == "endothelial",
+                   amd_seurat[[]]$cell_type == "endothelial",
   ]$score_seurat_kasit_updown,
   amd_seurat[[]][amd_seurat[[]]$condition_b == "AMD" &
    amd_seurat[[]]$cell_type == "endothelial",
