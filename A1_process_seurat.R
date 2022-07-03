@@ -8,100 +8,263 @@
 ####################################################
 ##
 
-## Libraries ####
+## Create Seurat object #####
 
-library(Seurat)
-library(scDiffCom)
-library(CellChat)
-library(data.table)
-library(ggplot2)
-library(future)
-library(ComplexUpset)
-library(escape)
-library(ggVennDiagram)
-library(ggExtra)
-library(limma)
-library(ggpubr)
+# We read the Seurat object retrieved from the galaxy portal and
+# and extract read counts and metadata. As it is unclear how this object
+# has been originally processed, we process it again following the
+# standard Seurat workflow. Importantly, gene names need to be
+# standardized.
 
-## Options ####
+# read object retrieved from human cell atlas galaxy portal
 
-plan(multisession, workers = 20)
-
-## Directory paths ####
-
-path_data <- "data/"
-path_results <- "results/"
-
-## Read Seurat object #####
-
-# the object was prepared on another custom R script
-amd_seurat <- readRDS(
+amd_seurat_unprocessed <- readRDS(
   paste0(
     path_data,
-    "/A1_amd_seurat.rds"
+    "A1_amd_seurat_unprocessed.rds"
   )
 )
-amd_seurat
 
-## Rescale data to make the object lighter ####
+# understand and extract meta.data
+
+table(amd_seurat_unprocessed$AB) # cell type
+table(amd_seurat_unprocessed$AD) # cell type
+table(amd_seurat_unprocessed$H) # age
+table(amd_seurat_unprocessed$F) # sex
+table(amd_seurat_unprocessed$B) # species
+table(amd_seurat_unprocessed$J) # left/right eye
+table(amd_seurat_unprocessed$L) # death
+table(amd_seurat_unprocessed$N) # condition
+table(amd_seurat_unprocessed$V) # condition
+table(amd_seurat_unprocessed$X) # region
+table(amd_seurat_unprocessed$R) # region
+table(amd_seurat_unprocessed$orig.ident) # nothing
+table(amd_seurat_unprocessed$E) # nothing
+table(amd_seurat_unprocessed$I) # nothing
+table(amd_seurat_unprocessed$Q) # nothing
+table(amd_seurat_unprocessed$U) # nothing
+table(amd_seurat_unprocessed$AA) # nothing
+table(amd_seurat_unprocessed$C) # url?
+table(amd_seurat_unprocessed$G) # url?
+table(amd_seurat_unprocessed$K) # url?
+table(amd_seurat_unprocessed$M) # url?
+table(amd_seurat_unprocessed$O) # url?
+table(amd_seurat_unprocessed$S) # url?
+table(amd_seurat_unprocessed$W) # url?
+table(amd_seurat_unprocessed$Y) # url?
+table(amd_seurat_unprocessed$AC) # url?
+table(amd_seurat_unprocessed$AE) # url?
+table(amd_seurat_unprocessed$D) # ??
+table(amd_seurat_unprocessed$P) # ??
+table(amd_seurat_unprocessed$T) # ??
+table(amd_seurat_unprocessed$Z) # ??
+
+amd_seurat_unprocessed$cell_type <- Idents(amd_seurat_unprocessed)
+amd_seurat_unprocessed$age <- amd_seurat_unprocessed$H
+amd_seurat_unprocessed$sex <- amd_seurat_unprocessed$F
+amd_seurat_unprocessed$condition <- amd_seurat_unprocessed$N
+amd_seurat_unprocessed$location <- amd_seurat_unprocessed$X
+amd_seurat_unprocessed$is_rpe <- ifelse(
+  amd_seurat_unprocessed$cell_type == "RPE", TRUE, FALSE
+)
+
+amd_md_cols <- c(
+  "cell_type", "age", "sex", "condition", "location", "is_rpe"
+)
+
+# clean gene names
+
+mart_human <- biomaRt::useMart(
+  "ensembl",
+  #host = "https://nov2020.archive.ensembl.org",
+  dataset = "hsapiens_gene_ensembl",
+  verbose = TRUE
+)
+mart_amd_hgnc <- biomaRt::getBM(
+  attributes = c(
+    "hgnc_symbol",
+    "ensembl_gene_id"
+  ),
+  filters = "hgnc_symbol",
+  mart = mart_human,
+  values = rownames(amd_seurat_unprocessed)
+)
+setDT(mart_amd_hgnc)
+mart_amd_hgnc <- dcast.data.table(
+  mart_amd_hgnc,
+  hgnc_symbol ~ .,
+  fun.aggregate = function(i) {
+    paste(i, collapse = "_")
+  },
+  value.var = "ensembl_gene_id"
+)
+setnames(
+  mart_amd_hgnc,
+  old = ".",
+  new = "ensembl_gene_ids"
+)
+mart_amd_ensembl <- biomaRt::getBM(
+  attributes = c(
+    "hgnc_symbol",
+    "ensembl_gene_id"
+  ),
+  filters = "ensembl_gene_id",
+  mart = mart_human,
+  values = rownames(amd_seurat_unprocessed)
+)
+setDT(mart_amd_ensembl)
+mart_amd_ensembl <- mart_amd_ensembl[hgnc_symbol != ""]
+
+amd_genes <- data.table(
+  orig_symbol = rownames(amd_seurat_unprocessed)
+)
+any(duplicated(mart_amd_hgnc$hgnc_symbol))
+table(mart_amd_hgnc$hgnc_symbol %in% amd_genes$orig_symbol)
+amd_genes[
+  mart_amd_hgnc,
+  on = "orig_symbol==hgnc_symbol",
+  ensembl_gene_ids_1 := i.ensembl_gene_ids
+]
+
+any(duplicated(mart_amd_ensembl$hgnc_symbol))
+any(duplicated(mart_amd_ensembl$ensembl_gene_id))
+amd_genes[
+  mart_amd_ensembl,
+  on = "orig_symbol==ensembl_gene_id",
+  hgnc_symbol_1 := i.hgnc_symbol
+]
+
+amd_genes[
+  ,
+  final_symbol := ifelse(
+    !is.na(hgnc_symbol_1) & !hgnc_symbol_1 %in% orig_symbol,
+    hgnc_symbol_1,
+    orig_symbol
+  )
+]
+
+any(duplicated(amd_genes$final_symbol))
+table(
+  amd_genes$orig_symbol %in% mart_amd_hgnc$hgnc_symbol
+)
+
+# recreate object
+
+amd_counts <- GetAssayData(amd_seurat_unprocessed, slot = "counts")
+identical(rownames(amd_counts), amd_genes$orig_symbol)
+rownames(amd_counts) <- amd_genes$final_symbol
+
+amd_seurat <- CreateSeuratObject(
+  counts = amd_counts,
+  project = "AMD_Seurat",
+  meta.data =  amd_seurat_unprocessed[[amd_md_cols]]
+)
+
+## Seurat workflow ####
+
+# QC and filtering
+
+# probably already done in the original object
+# but we rewrite the code for the shake of clarity
+
+VlnPlot(
+  amd_seurat,
+  features = c("nFeature_RNA", "nCount_RNA"),
+  ncol = 2
+)
+FeatureScatter(
+  amd_seurat,
+  feature1 = "nCount_RNA",
+  feature2 = "nFeature_RNA"
+)
+
+amd_seurat <- subset(
+  amd_seurat,
+  subset = nFeature_RNA > 300 & nFeature_RNA < 7000
+)
+
+# Normalization
+
+amd_seurat <- NormalizeData(
+  amd_seurat,
+  normalization.method = "LogNormalize",
+  scale.factor = 10000
+)
+
+# HVG
+
+amd_seurat <- FindVariableFeatures(
+  amd_seurat,
+  selection.method = "vst",
+  nfeatures = 2000
+)
+
+hvg_top10 <- head(VariableFeatures(amd_seurat), 10)
+
+VariableFeaturePlot(amd_seurat)
+
+# Scaling and PCA
 
 amd_seurat <- ScaleData(amd_seurat)
+amd_seurat <- RunPCA(amd_seurat)
 
-GetAssayData(amd_seurat)[1:5, 1:5]
-GetAssayData(amd_seurat, slot = "counts")[1:5, 1:5]
-head(rownames(amd_seurat))
+DimPlot(amd_seurat, reduction = "pca")
 
-## Understand the meta.data ####
+ElbowPlot(amd_seurat)
 
-table(amd_seurat$AB) # cell type
-table(amd_seurat$AD) # cell type
-table(amd_seurat$H) # age
-table(amd_seurat$F) # sex
-table(amd_seurat$B) # species
-table(amd_seurat$J) # left/right eye
-table(amd_seurat$L) # death
-table(amd_seurat$N) # condition
-table(amd_seurat$V) # condition
-table(amd_seurat$X) # region
-table(amd_seurat$R) # region
+# Clustering
 
-table(amd_seurat$orig.ident) # nothing
-table(amd_seurat$E) # nothing
-table(amd_seurat$I) # nothing
-table(amd_seurat$Q) # nothing
-table(amd_seurat$U) # nothing
-table(amd_seurat$AA) # nothing
-table(amd_seurat$C) # url?
-table(amd_seurat$G) # url?
-table(amd_seurat$K) # url?
-table(amd_seurat$M) # url?
-table(amd_seurat$O) # url?
-table(amd_seurat$S) # url?
-table(amd_seurat$W) # url?
-table(amd_seurat$Y) # url?
-table(amd_seurat$AC) # url?
-table(amd_seurat$AE) # url?
-table(amd_seurat$D) # ??
-table(amd_seurat$P) # ??
-table(amd_seurat$T) # ??
-table(amd_seurat$Z) # ??
+amd_seurat <- FindNeighbors(amd_seurat, dims = 1:10)
+amd_seurat <- FindClusters(amd_seurat, resolution = 0.05)
+amd_seurat <- RunUMAP(amd_seurat, dims = 1:10)
 
-## Rename informative meta.data ####
+DimPlot(amd_seurat, reduction = "umap")
 
-amd_seurat$cell_type <- Idents(amd_seurat)
-amd_seurat$age <- amd_seurat$H
-amd_seurat$sex <- amd_seurat$F
-amd_seurat$condition <- amd_seurat$N
-amd_seurat$location <- amd_seurat$X
-amd_seurat$is_rpe <- ifelse(
-  amd_seurat$cell_type == "RPE", TRUE, FALSE
+# As expected clustering correspond to initial cell type annotation
+table(amd_seurat$cell_type, amd_seurat$seurat_clusters)
+
+Idents(amd_seurat) <- amd_seurat$cell_type
+
+DimPlot(
+  amd_seurat,
+  reduction = "umap",
+  label = TRUE
+) + NoLegend()
+
+# Find cell type markers
+
+amd_markers <- FindAllMarkers(
+  amd_seurat,
+  only.pos = TRUE,
+  min.pct = 0.25,
+  logfc.threshold = 0.25
+)
+amd_markers %>% group_by(cluster) %>% top_n(n = 3, wt = avg_log2FC)
+
+amd_features <- c(
+  "APOD", "PMEL", "CXCR4", "PLP1", "RPE65", "IGKC", "VWF", "TPSB2"
+)
+
+VlnPlot(
+  amd_seurat,
+  features = amd_features,
+  ncol = 2,
+  pt.size = 0
+)
+
+## Save processed object ####
+
+saveRDS(
+  amd_seurat,
+  paste0(
+    path_results,
+    "A1_amd_seurat.rds"
+  )
 )
 
 ## Extract informative meta.data in data.table ####
 
 amd_md <- setDT(copy(amd_seurat[[]]))
-amd_md <- amd_md[, c("cell_type", "age", "sex", "condition", "location")]
-
 amd_md_summary <- amd_md[, .N, by = c("age", "sex", "condition", "location")]
 amd_md_summary_ct <- amd_md[
   ,
@@ -109,30 +272,9 @@ amd_md_summary_ct <- amd_md[
   by = c("cell_type", "age", "sex", "condition", "location")
 ]
 
-## DimPlots ####
+## Data for Figure 1A ####
 
-DimPlot(
-  amd_seurat,
-  reduction = "umap",
-  label = TRUE
-)
-DimPlot(
-  amd_seurat,
-  reduction = "umap",
-  group.by = "sex"
-)
-DimPlot(
-  amd_seurat,
-  reduction = "umap",
-  group.by = "age"
-)
-DimPlot(
-  amd_seurat,
-  reduction = "umap",
-  group.by = "condition"
-)
-DimPlot(
-  amd_seurat,
-  reduction = "umap",
-  group.by = "location"
-)
+amd_md[, .N, by = c("age", "sex", "condition")]
+
+## Figure 1B ####
+
