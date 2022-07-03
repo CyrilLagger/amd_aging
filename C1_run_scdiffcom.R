@@ -8,11 +8,6 @@
 ####################################################
 ##
 
-## Options ####
-
-# on the server
-plan(multicore, workers = 20)
-
 ## run normal scDiffCom analyses ####
 
 icc_scdiffcom <- list(
@@ -130,6 +125,20 @@ icc_scdiffcom <- list(
   )
 )
 
+scd_healthy <- icc_scdiffcom$icc_detec_healthy
+scd_amd <- icc_scdiffcom$icc_detec_79
+
+scd_healthy <- scDiffCom::FilterCCI(
+  scd_healthy,
+  new_threshold_quantile_score = 0.00
+)
+
+scd_amd <- scDiffCom::FilterCCI(
+  scd_amd,
+  new_threshold_quantile_score = 0.00
+)
+
+
 ## Save/Read normal scDiffcom results ####
 
 saveRDS(
@@ -148,6 +157,19 @@ icc_scdiffcom <- readRDS(
 )
 
 ## scDiffCom senescence analysis ####
+
+scd_sen <- run_interaction_analysis(
+  seurat_object = amd_seurat,
+  LRI_species = "human",
+  seurat_celltype_id = "cell_type_senescence_gsea",
+  seurat_condition_id = NULL,
+  scdiffcom_object_name = "icc_detec_all_sen_gsea",
+  iterations = 10000,
+  threshold_min_cells = 11,
+  threshold_quantile_score = 0.0
+)
+
+saveRDS(scd_sen, "../../../../../scd_sen.rds")
 
 icc_sen_scdiffcom <- list(
   icc_detec_all = run_interaction_analysis(
