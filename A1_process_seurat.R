@@ -22,6 +22,8 @@ library(ggVennDiagram)
 library(ggExtra)
 library(limma)
 library(ggpubr)
+library(cowplot)
+library(ComplexHeatmap)
 
 ## Options ####
 
@@ -42,7 +44,7 @@ amd_seurat <- readRDS(
 )
 amd_seurat
 
-## Rescale data to make the object lighter ####
+## Rescale data with default parameters to make the object lighter ####
 
 amd_seurat <- ScaleData(amd_seurat)
 
@@ -51,8 +53,6 @@ GetAssayData(amd_seurat, slot = "counts")[1:5, 1:5]
 head(rownames(amd_seurat))
 
 ## Understand the meta.data ####
-
-# TODO ask why this strange convention is used
 
 table(amd_seurat$AB) # cell type
 table(amd_seurat$AD) # cell type
@@ -110,12 +110,15 @@ amd_md_summary_ct <- amd_md[
   by = c("cell_type", "age", "sex", "condition", "location")
 ]
 
+amd_md[, .N, by = cell_type][order(-N)]
+
 ## DimPlots ####
 
 DimPlot(
   amd_seurat,
   reduction = "umap",
-  label = TRUE
+  label = TRUE,
+  repel = TRUE
 )
 DimPlot(
   amd_seurat,
