@@ -8,10 +8,6 @@
 ####################################################
 ##
 
-## Options ####
-
-plan(multicore, workers = 20)
-
 ## Load senescence reference gene lists ####
 
 senref_mayo <- fread(
@@ -170,20 +166,26 @@ amd_seurat$score_seurat_kasit_updown <- amd_seurat$score_seurat_kasit_up1 -
 
 ## Score with enrichIt ####
 
+plan(sequential)
 sen_enrichit <- enrichIt(
   obj = amd_seurat,
   gene.sets = list(
-    score_it_mayo = senref_mayo$gene,
+    #score_it_mayo = senref_mayo$gene,
     score_it_kasit_up = senref_kasit_up$gene,
-    score_it_kasit_down = senref_kasit_down$gene,
-    score_it_reactome = senref_reactome$gene,
-    score_it_combined = senref_combined$gene
+    score_it_kasit_down = senref_kasit_down$gene#,
+    #score_it_reactome = senref_reactome$gene,
+    #score_it_combined = senref_combined$gene
   ),
   groups = 1000,
-  cores = 20
+  cores = 5
 )
-# TODO
-# amd_seurat$score_gsea_mayo <- sen_nes
+plan(multicore, workers = 20)
+
+identical(rownames(sen_enrichit), colnames(amd_seurat))
+amd_seurat$score_gsea_kasit_up <- sen_enrichit$score_it_kasit_up
+amd_seurat$score_gsea_kasit_down <- sen_enrichit$score_it_kasit_down
+amd_seurat$score_gsea_kasit_updown <- amd_seurat$score_gsea_kasit_up -
+  amd_seurat$score_gsea_kasit_down
 
 ## Correlations between scores ####
 
@@ -200,6 +202,32 @@ cor(
   amd_seurat$score_seurat_kasit_up1
 )
 
+cor(
+  amd_seurat$score_gsea_kasit_up,
+  amd_seurat$score_seurat_kasit_up1
+)
+cor(
+  amd_seurat$score_gsea_kasit_down,
+  amd_seurat$score_seurat_kasit_down1,
+  method = "spearman"
+)
+
+ggplot(
+  amd_seurat[[]],
+  aes(
+    x = score_seurat_kasit_up1,
+    y = score_gsea_kasit_up
+  )
+) + geom_point()
+
+ggplot(
+  amd_seurat[[]],
+  aes(
+    x = score_seurat_kasit_down1,
+    y = score_gsea_kasit_down
+  )
+) + geom_point()
+
 ## Plot scores ####
 
 ggplot(
@@ -209,8 +237,7 @@ ggplot(
     color = cell_type,
     fill = cell_type
   )
-) +
-  geom_histogram(
+) + geom_histogram(
     bins = 50,
     position = "identity",
     alpha = 0.3
@@ -223,8 +250,7 @@ ggplot(
     color = cell_type,
     fill = cell_type
   )
-) +
-  geom_histogram(
+) +  geom_histogram(
     bins = 50,
     position = "identity",
     alpha = 0.3
@@ -237,8 +263,7 @@ ggplot(
     color = cell_type,
     fill = cell_type
   )
-) +
-  geom_histogram(
+) + geom_histogram(
     bins = 50,
     position = "identity",
     alpha = 0.3
@@ -251,8 +276,7 @@ sen_score_km_plot <- ggplot(
     y = score_seurat_mayo1,
     color = is_rpe
   )
-) +
-  geom_point()
+) + geom_point()
 sen_score_km_plot <- ggMarginal(
   sen_score_km_plot,
   groupColour = TRUE,
@@ -273,8 +297,7 @@ sen_score_kc_plot <- ggplot(
     y = score_seurat_combined1,
     color = is_rpe
   )
-) +
-  geom_point()
+) + geom_point()
 sen_score_kc_plot <- ggMarginal(
   sen_score_kc_plot,
   groupColour = TRUE,
@@ -334,16 +357,219 @@ ftable(
   amd_seurat$cell_type
 )
 
+amd_seurat$sen_gsea_kasit_updown_20pct <- ifelse(
+  amd_seurat$score_gsea_kasit_updown >=
+    quantile(amd_seurat$score_gsea_kasit_updown, 0.8),
+  TRUE,
+  FALSE
+)
+table(amd_seurat$sen_gsea_kasit_updown_20pct)
+ftable(
+  amd_seurat$age,
+  amd_seurat$sen_gsea_kasit_updown_20pct,
+  amd_seurat$cell_type
+)
+
+ftable(
+  amd_seurat$sen_kasit_updown_20pct,
+  amd_seurat$sen_gsea_kasit_updown_20pct,
+  amd_seurat$cell_type
+)
+
 ## Rename cell types based on senesence scores ####
 
 amd_seurat$cell_type_senescence <- ifelse(
   amd_seurat$sen_kasit_updown_20pct == TRUE,
-  paste0(amd_seurat$cell_type, "_sen"),
+  paste0(amd_seurat$cell_type, "-sen"),
   paste0(amd_seurat$cell_type, "")
 )
 table(amd_seurat$cell_type_senescence)
 
-## Plots for article ####
+amd_seurat$cell_type_senescence_gsea <- ifelse(
+  amd_seurat$sen_gsea_kasit_updown_20pct == TRUE,
+  paste0(amd_seurat$cell_type, "-sen"),
+  paste0(amd_seurat$cell_type, "")
+)
+table(amd_seurat$cell_type_senescence_gsea)
+
+amd_seurat$cell_type_senescence_gsea <- ifelse(
+  amd_seurat$cell_type_senescence_gsea == "macrophage-sen",
+  "macrophage",
+  ifelse(
+    amd_seurat$cell_type_senescence_gsea == "melanocyte-sen",
+    "melanocyte",
+    amd_seurat$cell_type_senescence_gsea
+  )
+)
+table(amd_seurat$cell_type_senescence_gsea)
+
+## Table for Manuscript ####
+
+ftable(
+  amd_seurat$cell_type,
+  amd_seurat$sen_gsea_kasit_updown_20pct
+)
+
+ftable(
+  amd_seurat$cell_type,
+  amd_seurat$sen_gsea_kasit_updown_20pct,
+  amd_seurat$age
+)
+
+## Plot for manuscript ###
+
+FeaturePlot(
+  amd_seurat,
+  features = "score_gsea_kasit_updown",
+  cols = c("yellow", "steelblue")
+) + ggtitle("ssGSEA senescence score")
+
+hist(amd_seurat$score_gsea_kasit_updown, breaks = 100)
+
+amd_seurat$is_senescent <- ifelse(
+  amd_seurat$sen_gsea_kasit_updown_20pct,
+  "senescent-like",
+  "normal"
+)
+
+DimPlot(
+  amd_seurat,
+  reduction = "umap",
+  group.by = "is_senescent"
+) + ggtitle("")
+
+VlnPlot(
+  amd_seurat,
+  features = c(
+    "TP53", "CDKN1A", "RB1", "NFKB1", "NOTCH1"
+  ),
+  group.by = "cell_type",
+  split.by = "is_senescent",
+  pt.size = 0
+)
+
+VlnPlot(
+  subset(amd_seurat, subset = is_senescent == "normal"),
+  features = c(
+    "TP53", "CDKN1A", "RB1", "NFKB1", "NOTCH1"
+  ),
+  group.by = "cell_type",
+  pt.size = 0
+)
+
+VlnPlot(
+  subset(amd_seurat, subset = is_senescent == "senescent-like"),
+  features = c(
+    "TP53", "CDKN1A", "RB1", "NFKB1", "NOTCH1"
+  ),
+  group.by = "cell_type",
+  pt.size = 0
+)
+
+
+## Box plot AMD ####
+
+amd_seurat$condition2 <- ifelse(
+  amd_seurat$condition == "normal",
+  "Normal", 
+  "AMD"
+)
+
+summary(
+  amd_seurat[[]][
+  amd_seurat$condition2 == "AMD",
+]$score_gsea_kasit_updown
+)
+
+mean(amd_seurat[[]][
+  amd_seurat$condition2 == "Normal",
+]$score_gsea_kasit_updown
+)
+sd(amd_seurat[[]][
+  amd_seurat$condition2 == "Normal",
+]$score_gsea_kasit_updown)
+
+ggplot(
+  amd_seurat[[]],
+  aes(
+    x  = score_gsea_kasit_updown,
+    col = condition2,
+    fill = condition2
+  )
+) + geom_histogram(
+  aes(y = ..density..),
+  bins = 100,
+  position = "identity",
+  alpha = 0.5
+)
+
+
+
+mean(amd_seurat[[]][
+  amd_seurat$condition2 == "AMD",
+]$score_gsea_kasit_updown
+)
+sd(amd_seurat[[]][
+  amd_seurat$condition2 == "AMD",
+]$score_gsea_kasit_updown)
+
+
+t.test(
+  amd_seurat[[]][
+    amd_seurat$condition2 == "AMD",
+  ]$score_gsea_kasit_updown,
+  amd_seurat[[]][
+    amd_seurat$condition2 == "Normal",
+  ]$score_gsea_kasit_updown, 
+  alternative = "two.sided",
+  var.equal = FALSE
+)
+
+ggpar(
+  ggboxplot(
+    amd_seurat[[]],
+    x = "condition2",
+    y = "score_gsea_kasit_updown",
+    color = "condition2",
+    palette = "jco",
+    xlab = "Condition",
+    ylab = "ssGSEA senescence score"
+  ) + stat_compare_means(
+    method = "t.test",
+    #label = "p.signif",
+    label.x.npc = 0.3,
+    alternative = "two.sided",
+    var.equal = FALSE
+  ),
+  legend.title = ""
+)
+
+ggplot(
+  amd_seurat[[]],
+  aes(
+    x = condition,
+    y = score_gsea_kasit_updown
+  )
+) + geom_boxplot()
+
+## Figures for article ####
+
+## important one 
+
+ggplot(
+  amd_seurat[[]],
+  aes(
+    x = score_gsea_kasit_updown
+  )
+) + geom_histogram(
+  color = "blue",
+  bins = 70,
+  alpha = 0.3,
+) + geom_vline(
+  xintercept = quantile(amd_seurat$score_gsea_kasit_updown, 0.8)
+) + xlab(
+  "ssGSEA senescence score"
+) + facet_wrap(vars(cell_type))
 
 sen_score_k_updown_plot <- ggplot(
   amd_seurat[[]],
@@ -352,11 +578,11 @@ sen_score_k_updown_plot <- ggplot(
     y = score_seurat_kasit_down1
   )
 ) + geom_point(
-  ) + xlab(
+) + xlab(
     "Senescence score (up-regulated signatures)"
-  ) + ylab(
+) + ylab(
     "Senescence score (down-regulated signatures)"
-  )
+)
 sen_score_k_updown_plot <- ggMarginal(
   sen_score_k_updown_plot
 )
@@ -583,7 +809,7 @@ t.test(
   amd_seurat[[]][amd_seurat[[]]$condition_b == "Normal" &
    amd_seurat[[]]$cell_type == "endothelial",
   ]$score_seurat_kasit_updown,
-  amd_seurat[[]][amd_seurat[[]]$condition_b == "AMD"&
+  amd_seurat[[]][amd_seurat[[]]$condition_b == "AMD" &
    amd_seurat[[]]$cell_type == "endothelial",
   ]$score_seurat_kasit_updown,
 )
