@@ -141,23 +141,3 @@ saveRDS(
         "C2_cellchat_sen.rds"
   )
 )
-
-## Supplementary Table 1 ####
-
-fwrite(
-  cci_cellchat_healthy,
-  paste0(
-    path_results,
-    "C2_ST1_cci_cellchat_healthy.csv"
-  )
-)
-
-## Supplementary Table 2 ####
-
-fwrite(
-  cci_cellchat_amd,
-  paste0(
-    path_results,
-    "C2_ST2_cci_cellchat_amd.csv"
-  )
-)
