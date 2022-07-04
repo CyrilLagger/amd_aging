@@ -10,11 +10,6 @@
 
 ## Compare scDiffCom to CellChat and healthy to AMD detection ####
 
-setDT(cci_cellchat_healthy)
-setDT(cci_cellchat_amd)
-scd_healthy
-scd_amd
-
 LRI_common <- LRI_human$LRI_curated[grepl("CellChat", DATABASE)]$LRI
 
 process_cci_cellchat <- function(cc) {
@@ -97,10 +92,10 @@ process_cci_cellchat <- function(cc) {
   return(cc)
 }
 
-cci_cellchat_healthy <- process_cci_cellchat(cci_cellchat_healthy)
-cci_cellchat_amd <- process_cci_cellchat(cci_cellchat_amd)
+cci_cellchat_healthy_clean <- process_cci_cellchat(cci_cellchat_healthy)
+cci_cellchat_amd_clean <- process_cci_cellchat(cci_cellchat_amd)
 
-cci_cellchat_healthy[
+cci_cellchat_healthy_clean[
   ,
   CCI := ifelse(
     duplicated(CCI),
@@ -108,9 +103,9 @@ cci_cellchat_healthy[
     CCI
   )
 ]
-table(grepl("_dup", cci_cellchat_healthy$CCI))
+table(grepl("_dup", cci_cellchat_healthy_clean$CCI))
 
-cci_cellchat_amd[
+cci_cellchat_amd_clean[
   ,
   CCI := ifelse(
     duplicated(CCI),
@@ -118,18 +113,95 @@ cci_cellchat_amd[
     CCI
   )
 ]
-table(grepl("_dup", cci_cellchat_amd$CCI))
+table(grepl("_dup", cci_cellchat_amd_clean$CCI))
 
+## Supplementary Tables 1-4 #####
 
-## Venn Diagrams ####
+cci_cellchat_healthy_clean[
+  ,
+  in_scDiffCom := CCI %in% scd_healthy@cci_table_detected$CCI
+]
+table(cci_cellchat_healthy_clean$in_scDiffCom)
+
+st1 <- cci_cellchat_healthy_clean[, c(1:11, 20)][order(-prob)]
+fwrite(
+  st1,
+  paste0(
+    path_results,
+    "C3_st1_cc_healthy.csv"
+  )
+)
+
+cci_cellchat_amd_clean[
+  ,
+  in_scDiffCom := CCI %in% scd_amd@cci_table_detected$CCI
+]
+table(cci_cellchat_amd_clean$in_scDiffCom)
+st2 <- cci_cellchat_amd_clean[, c(1:11, 20)][order(-prob)]
+fwrite(
+  st2,
+  paste0(
+    path_results,
+    "C3_st2_cc_amd.csv"
+  )
+)
+
+cci_scd_healthy <- scd_healthy@cci_table_detected
+cci_scd_amd <- scd_amd@cci_table_detected
+
+cci_scd_healthy[
+  ,
+  in_CellChat := ifelse(
+    CCI %in% cci_cellchat_healthy_clean$CCI,
+    TRUE,
+    FALSE
+    )
+]
+table(cci_scd_healthy$in_CellChat)
+cci_scd_healthy[
+  LRI_human$LRI_curated,
+  on = "LRI",
+  LRI_origin := i.DATABASE
+]
+st3 <- cci_scd_healthy[, c(3:5, 23:25, 31, 30)][order(-CCI_SCORE)]
+fwrite(
+  st3,
+  paste0(
+    path_results,
+    "C3_st3_scd_healthy.csv"
+  )
+)
+
+cci_scd_amd[
+  ,
+  in_CellChat := ifelse(
+    CCI %in% cci_cellchat_amd_clean$CCI, TRUE, FALSE
+    )
+]
+table(cci_scd_amd$in_CellChat)
+cci_scd_amd[
+  LRI_human$LRI_curated,
+  on = "LRI",
+  LRI_origin := i.DATABASE
+]
+st4 <- cci_scd_amd[, c(3:5, 23:25, 31, 30)][order(-CCI_SCORE)]
+fwrite(
+  st4,
+  paste0(
+    path_results,
+    "C3_st4_scd_amd.csv"
+  )
+)
+
+## Supplementary Figure 1A-C ####
 
 overlap_venn_healthy <- ggVennDiagram::process_data(
   ggVennDiagram::Venn(
     list(
-      "CellChat" = cci_cellchat_healthy$CCI,
+      "CellChat" = cci_cellchat_healthy_clean$CCI,
       "scDiffCom" = scd_healthy@cci_table_detected[
         LRI %in% LRI_common |
-          CCI %in% cci_cellchat_healthy$CCI]$CCI
+          CCI %in% cci_cellchat_healthy_clean$CCI]$CCI
     )
   )
 )
@@ -176,15 +248,15 @@ overlap_venn_healthy  <- ggplot() +
 # theme(
 #   plot.title = element_text(size = 20)
 # )
-overlap_venn_healthy 
+overlap_venn_healthy
 
 overlap_venn_amd <- ggVennDiagram::process_data(
   ggVennDiagram::Venn(
     list(
-      "CellChat" = cci_cellchat_amd$CCI,
+      "CellChat" = cci_cellchat_amd_clean$CCI,
       "scDiffCom" = scd_amd@cci_table_detected[
         LRI %in% LRI_common |
-          CCI %in% cci_cellchat_amd$CCI]$CCI
+          CCI %in% cci_cellchat_amd_clean$CCI]$CCI
     )
   )
 )
@@ -231,19 +303,19 @@ overlap_venn_amd  <- ggplot() +
 # theme(
 #   plot.title = element_text(size = 20)
 #)
-overlap_venn_amd 
+overlap_venn_amd
 
 overlap_venn_combined <- ggVennDiagram::process_data(
   ggVennDiagram::Venn(
     list(
-      "CellChat Normal" = cci_cellchat_healthy$CCI,
-      "CellChat AMD" = cci_cellchat_amd$CCI,
+      "CellChat Normal" = cci_cellchat_healthy_clean$CCI,
+      "CellChat AMD" = cci_cellchat_amd_clean$CCI,
       "scDiffCom Normal" = scd_healthy@cci_table_detected[
         LRI %in% LRI_common |
-          CCI %in% cci_cellchat_healthy$CCI]$CCI,
+          CCI %in% cci_cellchat_healthy_clean$CCI]$CCI,
       "scDiffCom AMD" = scd_amd@cci_table_detected[
         LRI %in% LRI_common |
-          CCI %in% cci_cellchat_amd$CCI]$CCI
+          CCI %in% cci_cellchat_amd_clean$CCI]$CCI
     )
   )
 )
@@ -316,80 +388,25 @@ overlap_venn_title <- ggdraw() +
     plot.margin = margin(0,0,0,7)
   )
 
-sup_fig_c1 <- plot_grid(
+sf1 <- plot_grid(
   overlap_venn_title,
   overlap_venn_grid,
   ncol = 1,
   rel_heights = c(0.1, 1)
 )
-#manual save at 1800 width
-# ggsave(
-#   "../results/images/C3_sup_fig_c1.png",
-#   sup_fig_c1,
-#   scale = 1
-# )
-
-## Prepare supplementary tables C1-4 for CCIs #####
-
-cci_cellchat_healthy[
-  ,
-  in_scDiffCom := CCI %in% scd_healthy@cci_table_detected$CCI
-]
-table(cci_cellchat_healthy$in_scDiffCom)
-sup_table_c1 <- cci_cellchat_healthy[, c(1:11, 20)][order(-prob)]
-fwrite(
-  sup_table_c1,
-  "../results/C3_sup_table_c1_healthy.csv"
-)
-
-cci_cellchat_amd[
-  ,
-  in_scDiffCom := CCI %in% scd_amd@cci_table_detected$CCI
-]
-table(cci_cellchat_amd$in_scDiffCom)
-sup_table_c2 <- cci_cellchat_amd[, c(1:11, 20)][order(-prob)]
-fwrite(
-  sup_table_c2,
-  "../results/C3_sup_table_c2_amd.csv"
-)
-
-cci_scd_healthy <- scd_healthy@cci_table_detected
-cci_scd_amd <- scd_amd@cci_table_detected
-
-cci_scd_healthy[, in_CellChat := ifelse(
-  CCI %in% cci_cellchat_healthy$CCI, TRUE, FALSE
-)]
-table(cci_scd_healthy$in_CellChat)
-cci_scd_healthy[
-  LRI_human$LRI_curated,
-  on = "LRI",
-  LRI_origin := i.DATABASE
-]
-sup_table_c3 <- cci_scd_healthy[, c(3:5, 23:25, 31, 30)][order(-CCI_SCORE)]
-fwrite(
-  sup_table_c3,
-  "../results/C3_sup_table_c3_healthy.csv"
-)
-
-cci_scd_amd[, in_CellChat := ifelse(
-  CCI %in% cci_cellchat_amd$CCI, TRUE, FALSE
-)]
-table(cci_scd_amd$in_CellChat)
-cci_scd_amd[
-  LRI_human$LRI_curated,
-  on = "LRI",
-  LRI_origin := i.DATABASE
-]
-sup_table_c4 <- cci_scd_amd[, c(3:5, 23:25, 31, 30)][order(-CCI_SCORE)]
-fwrite(
-  sup_table_c4,
-  "../results/C3_sup_table_c4_amd.csv"
+ggsave(
+  paste0(
+    path_results,
+    "images/C3_sf1.png"
+  ),
+  sf1,
+  scale = 2
 )
 
 ## CCIs presents in the 4-overlap ####
 
-cci_common <- cci_cellchat_healthy[
-  CCI %in% cci_cellchat_amd$CCI &
+cci_common <- cci_cellchat_healthy_clean[
+  CCI %in% cci_cellchat_amd_clean$CCI &
     CCI %in% cci_scd_healthy$CCI &
     CCI %in% cci_scd_amd$CCI
 ]
@@ -595,8 +612,8 @@ draw(
 
 ## ECM interactions ####
 
-cci_cellchat_healthy[annotation == "ECM-Receptor"]
-cci_cellchat_amd[annotation == "ECM-Receptor"]
+cci_cellchat_healthy_clean[annotation == "ECM-Receptor"]
+cci_cellchat_amd_clean[annotation == "ECM-Receptor"]
 
 cldb[annotation == "ECM-Receptor"]
 
