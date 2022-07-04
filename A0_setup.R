@@ -24,6 +24,7 @@ library(limma)
 library(ggpubr)
 library(cowplot)
 library(ComplexHeatmap)
+library(GEOquery)
 
 ## Options ####
 
