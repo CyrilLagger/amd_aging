@@ -454,161 +454,138 @@ netAnalysis_signalingRole_network(
   font.size = 10
 )
 
-## Secreted pathways heatmaps ####
+## Secreted pathways heatmaps Figure 2A ####
 
-heat_healthy <- netAnalysis_signalingRole_heatmap(
-  object.list[[1]],
-  signaling = c("VEGF","BMP","PTN","GDF","GRN","HGF"),
-  pattern = "all",
-  width = 8,
-  height = 10,
-  title = names(object.list)[1],
-  color.heatmap = "OrRd"
+png(
+  paste0(
+    path_results,
+    "images/C3_f2a.png"
+  ),
+  width = 600
 )
-heat_amd <- netAnalysis_signalingRole_heatmap(
-  object.list[[2]],
-  signaling = c("VEGF","BMP","PTN","GDF","GRN","HGF"),
-  pattern = "all",
-  width = 8,
-  height = 10,
-  title = names(object.list)[2],
-  color.heatmap = "OrRd"
+draw(
+   netAnalysis_signalingRole_heatmap(
+    object.list[[1]],
+    signaling = c("VEGF","BMP","PTN","GDF","GRN","HGF"),
+    pattern = "all",
+    width = 8,
+    height = 10,
+    title = names(object.list)[1],
+    color.heatmap = "OrRd"
+  ) + 
+    netAnalysis_signalingRole_heatmap(
+    object.list[[2]],
+    signaling = c("VEGF","BMP","PTN","GDF","GRN","HGF"),
+    pattern = "all",
+    width = 8,
+    height = 10,
+    title = names(object.list)[2],
+    color.heatmap = "OrRd"
+  ),
+  ht_gap = unit(0.5, "cm")
 )
-draw(heat_healthy + heat_amd, ht_gap = unit(0.5, "cm"))
+dev.off()
 
-## Supplementary figures secreted ####
+## VEGF and BMP pathways heatmaps Fig 2B-C ####
 
-netAnalysis_signalingRole_network(
-  cellchat_healthy,
-  signaling = c("VEGF"),
-  width = 10,
-  height = 3,
-  font.size = 12
+png(
+  paste0(
+    path_results,
+    "images/C3_f2b.png"
+  ),
+  width = 800
 )
-netAnalysis_signalingRole_network(
-  cellchat_amd,
-  signaling = c("VEGF"),
-  width = 10,
-  height = 3,
-  font.size = 12
-) 
-netAnalysis_signalingRole_network(
-  cellchat_healthy,
-  signaling = c("BMP"),
-  width = 10,
-  height = 3,
-  font.size = 12
-)
-netAnalysis_signalingRole_network(
-  cellchat_amd,
-  signaling = c("BMP"),
-  width = 10,
-  height = 3,
-  font.size = 12
-)
-netAnalysis_signalingRole_network(
-  cellchat_healthy,
-  signaling = c("PTN"),
-  width = 10,
-  height = 3,
-  font.size = 12
-)
-netAnalysis_signalingRole_network(
-  cellchat_amd,
-  signaling = c("PTN"),
-  width = 10,
-  height = 3,
-  font.size = 12
-)
-netAnalysis_signalingRole_network(
-  cellchat_healthy,
-  signaling = c("GDF"),
-  width = 10,
-  height = 3,
-  font.size = 12
-)
-netAnalysis_signalingRole_network(
-  cellchat_amd,
-  signaling = c("GDF"),
-  width = 10,
-  height = 3,
-  font.size = 12
-)
-netAnalysis_signalingRole_network(
-  cellchat_healthy,
-  signaling = c("GRN"),
-  width = 10,
-  height = 3,
-  font.size = 12
-)
-netAnalysis_signalingRole_network(
-  cellchat_amd,
-  signaling = c("GRN"),
-  width = 10,
-  height = 3,
-  font.size = 12
-)
-netAnalysis_signalingRole_network(
-  cellchat_healthy,
-  signaling = c("HGF"),
-  width = 10,
-  height = 3,
-  font.size = 12
-)
-netAnalysis_signalingRole_network(
-  cellchat_amd,
-  signaling = c("HGF"),
-  width = 10,
-  height = 3,
-  font.size = 12
-)
-
-
-## VEGF and BMP pathways ####
-
 draw(
   netVisual_heatmap(
     cellchat_healthy,
     signaling = "VEGF",
     color.heatmap = "Reds",
-    title.name = paste("VEGF signaling ", names(object.list)[1]),
+    title.name = paste("VEGF signaling ", names(cc_list)[1]),
     width = 10,
     height = 10,
     font.size = 12
-  )+
+  ) +
     netVisual_heatmap(
       cellchat_amd,
       signaling = "VEGF",
       color.heatmap = "Reds",
-      title.name = paste("VEGF signaling ", names(object.list)[2]),
+      title.name = paste("VEGF signaling ", names(cc_list)[2]),
       width = 10,
       height = 10,
       font.size = 12
     ),
   ht_gap = unit(0.5, "cm")
 )
+dev.off()
 
+png(
+  paste0(
+    path_results,
+    "images/C3_f2c.png"
+  ),
+  width = 800
+)
 draw(
   netVisual_heatmap(
     cellchat_healthy,
     signaling = "BMP",
     color.heatmap = "Reds",
-    title.name = paste("BMP signaling ", names(object.list)[1]),
+    title.name = paste("BMP signaling ", names(cc_list)[1]),
     width = 10,
     height = 10,
     font.size = 12
-  )+
+  ) +
     netVisual_heatmap(
       cellchat_amd,
       signaling = "BMP",
       color.heatmap = "Reds",
-      title.name = paste("BMP signaling ", names(object.list)[2]),
+      title.name = paste("BMP signaling ", names(cc_list)[2]),
       width = 10,
       height = 10,
       font.size = 12
     ),
   ht_gap = unit(0.5, "cm")
 )
+dev.off()
+
+## Supplementary Figures 2A-F ####
+
+sf2_pathways <- data.table(
+  id = c(
+    "a1", "a2", "b1", "b2", "c1", "c2",
+    "d1", "d2", "e1", "e2", "f1"
+  ),
+  pw = c(
+    "VEGF", "VEGF", "BMP", "BMP", "PTN", "PTN",
+    "GDF", "GDF", "GRN", "GRN", "HGF"
+  ),
+  condition = c(
+    "healthy", "amd", "healthy", "amd", "healthy", "amd",
+    "healthy", "amd", "healthy", "amd", "healthy" 
+  )
+)
+
+for (i in seq_len(nrow(sf2_pathways))) {
+  png(
+    paste0(
+      path_results,
+      "images/C3_sf2",
+      sf2_pathways[i]$id,
+      ".png"
+    ),
+    width = 400,
+    height = 200
+  )
+  netAnalysis_signalingRole_network(
+    get(paste0("cellchat_", sf2_pathways[i]$condition)),
+    signaling = sf2_pathways[i]$pw,
+    width = 10,
+    height = 3,
+    font.size = 14,
+    font.size.title = 15
+  )
+  dev.off()
+}
 
 ## ECM interactions ####
 
