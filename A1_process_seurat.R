@@ -274,7 +274,7 @@ amd_md[, .N, by = c("age", "sex", "condition")]
 amd_fig1B <- amd_md[, .N, by = c("cell_type")][order(-N)]
 amd_fig1B[
   ,
-  pct := N / sum(N)*100
+  pct := N / sum(N) * 100
 ]
 amd_fig1B
 

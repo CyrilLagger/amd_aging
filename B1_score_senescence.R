@@ -454,7 +454,7 @@ t.test(
   ]$score_gsea_kasit_updown,
   amd_seurat[[]][
     amd_seurat$condition_abbr == "Normal",
-  ]$score_gsea_kasit_updown, 
+  ]$score_gsea_kasit_updown,
   alternative = "two.sided",
   var.equal = FALSE
 )
@@ -663,7 +663,7 @@ sen_score_k_updown_hist_ct <- ggplot(
   )
 ) + geom_histogram(
   bins = 50,
-  alpha = 0.5, 
+  alpha = 0.5,
   position = "identity"
 ) + geom_vline(
   xintercept = quantile(amd_seurat$score_seurat_kasit_updown, 0.8)

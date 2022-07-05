@@ -1333,7 +1333,7 @@ scd_heatmap_sen <- function(cci_dt, title.name) {
   ha1 <- rowAnnotation(
     Strength = anno_barplot(rowSums(abs(mat)),
     border = FALSE,
-    gp = gpar(fill = color.use, col=color.use)),
+    gp = gpar(fill = color.use, col = color.use)),
     show_annotation_name = FALSE
   )
   ha2 <- HeatmapAnnotation(

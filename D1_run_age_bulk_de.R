@@ -193,7 +193,7 @@ rpe_limma_de_cc[
   bh_value := p.adjust(P.Value, method = "BH")
 ]
 rpe_limma_de_cc_significant <- rpe_limma_de_cc[
-  bh_value <= 0.1 & abs(logFC) >= log2(1.5)/70
+  bh_value <= 0.1 & abs(logFC) >= log2(1.5) / 70
 ]
 rpe_limma_de_cc_significant[
   ,
@@ -377,4 +377,3 @@ ggsave(
   height = 3000,
   units = "px"
 )
-
