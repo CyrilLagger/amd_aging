@@ -365,6 +365,10 @@ amd_seurat$sen_gsea_kasit_updown_20pct <- ifelse(
 )
 table(amd_seurat$sen_gsea_kasit_updown_20pct)
 ftable(
+  amd_seurat$sen_gsea_kasit_updown_20pct,
+  amd_seurat$cell_type
+)
+ftable(
   amd_seurat$age,
   amd_seurat$sen_gsea_kasit_updown_20pct,
   amd_seurat$cell_type
@@ -403,7 +407,107 @@ amd_seurat$cell_type_senescence_gsea <- ifelse(
 )
 table(amd_seurat$cell_type_senescence_gsea)
 
-## Table for Manuscript ####
+amd_seurat$is_senescent <- ifelse(
+  amd_seurat$sen_gsea_kasit_updown_20pct,
+  "senescent-like",
+  "normal"
+)
+
+## Figure 5A ####
+
+fig_5a <- FeaturePlot(
+  amd_seurat,
+  features = "score_gsea_kasit_updown",
+  cols = c("yellow", "steelblue")
+) + ggtitle(
+  "ssGSEA senescence score"
+)
+fig_5a
+
+## Figure 5B ####
+
+summary(
+  amd_seurat[[]][
+  amd_seurat$condition_abbr == "AMD",
+]$score_gsea_kasit_updown
+)
+
+mean(amd_seurat[[]][
+  amd_seurat$condition_abbr == "Normal",
+]$score_gsea_kasit_updown
+)
+sd(amd_seurat[[]][
+  amd_seurat$condition_abbr == "Normal",
+]$score_gsea_kasit_updown)
+
+mean(amd_seurat[[]][
+  amd_seurat$condition_abbr == "AMD",
+]$score_gsea_kasit_updown
+)
+sd(amd_seurat[[]][
+  amd_seurat$condition_abbr == "AMD",
+]$score_gsea_kasit_updown)
+
+t.test(
+  amd_seurat[[]][
+    amd_seurat$condition_abbr == "AMD",
+  ]$score_gsea_kasit_updown,
+  amd_seurat[[]][
+    amd_seurat$condition_abbr == "Normal",
+  ]$score_gsea_kasit_updown, 
+  alternative = "two.sided",
+  var.equal = FALSE
+)
+
+fig_5b <- ggpar(
+  ggboxplot(
+    amd_seurat[[]],
+    x = "condition_abbr",
+    y = "score_gsea_kasit_updown",
+    color = "condition_abbr",
+    palette = "jco",
+    xlab = "Condition",
+    ylab = "ssGSEA senescence score"
+  ) + stat_compare_means(
+    method = "t.test",
+    #label = "p.signif",
+    label.x.npc = 0.3,
+    alternative = "two.sided",
+    var.equal = FALSE
+  ),
+  legend.title = ""
+)
+
+## Figure 5C ####
+
+## Figure 5D ####
+
+## Supplementary Figure 5A ####
+
+ggplot(
+  amd_seurat[[]],
+  aes(
+    x = score_gsea_kasit_updown
+  )
+) + geom_histogram(
+  color = "blue",
+  bins = 70,
+  alpha = 0.3,
+) + geom_vline(
+  xintercept = quantile(amd_seurat$score_gsea_kasit_updown, 0.8)
+) + xlab(
+  "ssGSEA senescence score"
+) + facet_wrap(vars(cell_type))
+
+## Supplementary Figure 5B ####
+
+DimPlot(
+  amd_seurat,
+  reduction = "umap",
+  group.by = "is_senescent"
+) + ggtitle("")
+
+## Table for Supplementary Figure 5C ####
 
 ftable(
   amd_seurat$cell_type,
@@ -416,27 +520,7 @@ ftable(
   amd_seurat$age
 )
 
-## Plot for manuscript ###
-
-FeaturePlot(
-  amd_seurat,
-  features = "score_gsea_kasit_updown",
-  cols = c("yellow", "steelblue")
-) + ggtitle("ssGSEA senescence score")
-
-hist(amd_seurat$score_gsea_kasit_updown, breaks = 100)
-
-amd_seurat$is_senescent <- ifelse(
-  amd_seurat$sen_gsea_kasit_updown_20pct,
-  "senescent-like",
-  "normal"
-)
-
-DimPlot(
-  amd_seurat,
-  reduction = "umap",
-  group.by = "is_senescent"
-) + ggtitle("")
+## Supplementary Figure 5D ####
 
 VlnPlot(
   amd_seurat,
@@ -466,129 +550,7 @@ VlnPlot(
   pt.size = 0
 )
 
-
-## Box plot AMD ####
-
-amd_seurat$condition2 <- ifelse(
-  amd_seurat$condition == "normal",
-  "Normal", 
-  "AMD"
-)
-
-summary(
-  amd_seurat[[]][
-  amd_seurat$condition2 == "AMD",
-]$score_gsea_kasit_updown
-)
-
-mean(amd_seurat[[]][
-  amd_seurat$condition2 == "Normal",
-]$score_gsea_kasit_updown
-)
-sd(amd_seurat[[]][
-  amd_seurat$condition2 == "Normal",
-]$score_gsea_kasit_updown)
-
-ggplot(
-  amd_seurat[[]],
-  aes(
-    x  = score_gsea_kasit_updown,
-    col = condition2,
-    fill = condition2
-  )
-) + geom_histogram(
-  aes(y = ..density..),
-  bins = 100,
-  position = "identity",
-  alpha = 0.5
-)
-
-
-
-mean(amd_seurat[[]][
-  amd_seurat$condition2 == "AMD",
-]$score_gsea_kasit_updown
-)
-sd(amd_seurat[[]][
-  amd_seurat$condition2 == "AMD",
-]$score_gsea_kasit_updown)
-
-
-t.test(
-  amd_seurat[[]][
-    amd_seurat$condition2 == "AMD",
-  ]$score_gsea_kasit_updown,
-  amd_seurat[[]][
-    amd_seurat$condition2 == "Normal",
-  ]$score_gsea_kasit_updown, 
-  alternative = "two.sided",
-  var.equal = FALSE
-)
-
-ggpar(
-  ggboxplot(
-    amd_seurat[[]],
-    x = "condition2",
-    y = "score_gsea_kasit_updown",
-    color = "condition2",
-    palette = "jco",
-    xlab = "Condition",
-    ylab = "ssGSEA senescence score"
-  ) + stat_compare_means(
-    method = "t.test",
-    #label = "p.signif",
-    label.x.npc = 0.3,
-    alternative = "two.sided",
-    var.equal = FALSE
-  ),
-  legend.title = ""
-)
-
-ggplot(
-  amd_seurat[[]],
-  aes(
-    x = condition,
-    y = score_gsea_kasit_updown
-  )
-) + geom_boxplot()
-
-## Figures for article ####
-
-## important one 
-
-ggplot(
-  amd_seurat[[]],
-  aes(
-    x = score_gsea_kasit_updown
-  )
-) + geom_histogram(
-  color = "blue",
-  bins = 70,
-  alpha = 0.3,
-) + geom_vline(
-  xintercept = quantile(amd_seurat$score_gsea_kasit_updown, 0.8)
-) + xlab(
-  "ssGSEA senescence score"
-) + facet_wrap(vars(cell_type))
-
-## important one 
-
-ggplot(
-  amd_seurat[[]],
-  aes(
-    x = score_gsea_kasit_updown
-  )
-) + geom_histogram(
-  color = "blue",
-  bins = 70,
-  alpha = 0.3,
-) + geom_vline(
-  xintercept = quantile(amd_seurat$score_gsea_kasit_updown, 0.8)
-) + xlab(
-  "ssGSEA senescence score"
-) + facet_wrap(vars(cell_type))
-
-##
+## Additional figures ####
 
 sen_score_k_updown_plot <- ggplot(
   amd_seurat[[]],
@@ -746,89 +708,4 @@ ggsave(
     "images/B1_sen_cut_k_updown.png"
   ),
   sen_cut_k_updown_plot
-)
-
-## Some statistical tests ####
-
-amd_seurat$condition_b <- ifelse(
-  amd_seurat$condition == "normal", "Normal", "AMD"
-)
-sen_hist_amd <- ggplot(
-  amd_seurat[[]],
-  aes(
-    x = score_seurat_kasit_updown,
-    color = condition_b,
-    fill = condition_b
-  )
-) + geom_histogram(
-  aes(y = ..density..),
-  bins = 50,
-  position = "identity",
-  alpha = 0.5
-) + geom_density(
-  alpha = 0.1
-) + theme(
-  legend.title = element_blank()
-) + xlab(
-  "Senescence score (up - down signatures)"
-)
-ggsave(
-  paste0(
-    path_results,
-    "images/B1_sen_hist_amd.png"
-  ),
-  sen_hist_amd
-)
-
-sen_boxplot_amd <- ggplot(
-  amd_seurat[[]],
-  aes(
-    x = condition_b,
-    y = score_seurat_kasit_updown
-  )
-) + geom_boxplot(
-) + stat_compare_means(
-) + ylab(
-  "Senescence score (up - down signatures)"
-) + xlab("")
-ggsave(
-  paste0(
-    path_results,
-    "images/B1_sen_boxplot_amd.png"
-  ),
-  sen_boxplot_amd
-)
-
-t.test(
-  amd_seurat[[]][amd_seurat[[]]$condition_b == "Normal",
-  ]$score_seurat_kasit_updown,
-  amd_seurat[[]][amd_seurat[[]]$condition_b == "AMD",
-  ]$score_seurat_kasit_updown,
-)
-
-t.test(
-  amd_seurat[[]][amd_seurat[[]]$condition_b == "Normal" &
-                   amd_seurat[[]]$cell_type == "RPE",
-  ]$score_seurat_kasit_updown,
-  amd_seurat[[]][amd_seurat[[]]$condition_b == "AMD"&
-                   amd_seurat[[]]$cell_type == "RPE",
-  ]$score_seurat_kasit_updown,
-)
-
-t.test(
-  amd_seurat[[]][amd_seurat[[]]$condition_b == "Normal" &
-                   amd_seurat[[]]$cell_type == "fibroblast",
-  ]$score_seurat_kasit_updown,
-  amd_seurat[[]][amd_seurat[[]]$condition_b == "AMD"&
-                   amd_seurat[[]]$cell_type == "fibroblast",
-  ]$score_seurat_kasit_updown,
-)
-
-t.test(
-  amd_seurat[[]][amd_seurat[[]]$condition_b == "Normal" &
-                   amd_seurat[[]]$cell_type == "endothelial",
-  ]$score_seurat_kasit_updown,
-  amd_seurat[[]][amd_seurat[[]]$condition_b == "AMD" &
-   amd_seurat[[]]$cell_type == "endothelial",
-  ]$score_seurat_kasit_updown,
 )
