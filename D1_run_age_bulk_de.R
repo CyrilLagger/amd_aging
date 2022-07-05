@@ -138,11 +138,16 @@ cc_genes <- unique(
 cc_genes <- cc_genes[!is.na(cc_genes)]
 length(cc_genes)
 
-## Subset aging genes by scDiffCom ####
+## Subset aging genes by ICC, Sup Table 5 ####
 
 table(
   scd_genes %in% unique(rpe_limma_de$Gene.symbol)
 )
+table(
+    cc_genes %in% unique(rpe_limma_de$Gene.symbol)
+)
+
+#for scDiffCom
 rpe_limma_de_scd <- rpe_limma_de[
   Gene.symbol %in% scd_genes,
   c("Gene.symbol", "logFC", "P.Value", "adj.P.Val")
@@ -151,100 +156,231 @@ rpe_limma_de_scd[, bh_value := p.adjust(P.Value, method = "BH")]
 rpe_limma_de_scd_significant <- rpe_limma_de_scd[
   bh_value <= 0.1 & abs(logFC) >= log2(1.5) / 70
 ]
+rpe_limma_de_scd_significant[
+  ,
+  pi_score_abs := -log10(bh_value) * abs(logFC)
+]
+rpe_limma_de_scd_significant <- rpe_limma_de_scd_significant[
+  order(-pi_score_abs)
+]
+rpe_limma_de_scd_significant <- unique(
+  rpe_limma_de_scd_significant,
+  by = "Gene.symbol"
+)
+rpe_limma_de_scd_significant[
+  ,
+  regulation := ifelse(
+      logFC < 0, "DOWN", "UP"
+  )
+]
+table(rpe_limma_de_scd_significant$regulation)
 
 fwrite(
     rpe_limma_de_scd_significant,
-    "../results/D1_bulk_aging_deg_scd.csv"
+    paste0(
+      path_results,
+      "D1_st5.csv"
+    )
 )
 
-unique(rpe_limma_de_scd_significant$Gene.symbol)
-
-rpe_limma_de_scd_up <- unique(
-    rpe_limma_de_scd_significant[logFC >= 0]$Gene.symbol
+#for CellChat (actually all included in scDiffCom already)
+rpe_limma_de_cc <- rpe_limma_de[
+  Gene.symbol %in% cc_genes,
+  c("Gene.symbol", "logFC", "P.Value", "adj.P.Val")
+]
+rpe_limma_de_cc[
+  ,
+  bh_value := p.adjust(P.Value, method = "BH")
+]
+rpe_limma_de_cc_significant <- rpe_limma_de_cc[
+  bh_value <= 0.1 & abs(logFC) >= log2(1.5)/70
+]
+rpe_limma_de_cc_significant[
+  ,
+  pi_score_abs := -log10(bh_value) * abs(logFC)
+]
+rpe_limma_de_cc_significant <- rpe_limma_de_cc_significant[
+  order(-pi_score_abs)
+]
+rpe_limma_de_cc_significant <- unique(
+  rpe_limma_de_cc_significant,
+  by = "Gene.symbol"
 )
-rpe_limma_de_scd_down <- unique(
-    rpe_limma_de_scd_significant[logFC <= 0]$Gene.symbol
-)
+rpe_limma_de_cc_significant[
+  ,
+  regulation := ifelse(
+      logFC < 0, "DOWN", "UP"
+  )
+]
 
 table(
-    unique(rpe_limma_de_scd_up) %in% unique(
-        unlist(
-            cci_scd_healthy[, c("LIGAND_1", "LIGAND_2", "RECEPTOR_1", "RECEPTOR_2", "RECEPTOR_3")]
-        )
-    ) | unique(rpe_limma_de_scd_up) %in% unique(
-        unlist(
-            cci_scd_amd[, c("LIGAND_1", "LIGAND_2", "RECEPTOR_1", "RECEPTOR_2", "RECEPTOR_3")]
-        )
+  rpe_limma_de_cc_significant$Gene.symbol %in%
+  rpe_limma_de_scd_significant$Gene.symbol
+)
+
+## Find DEG also parts of CCIs, Table 1 ####
+
+scd_cols_genes <- c(
+  "LIGAND_1", "LIGAND_2", "RECEPTOR_1", "RECEPTOR_2", "RECEPTOR_3"
+)
+scd_detected_genes <- unique(
+  c(
+    unlist(
+      cci_scd_healthy[, scd_cols_genes, with = FALSE]
+    ),
+     unlist(
+      cci_scd_amd[, scd_cols_genes, with = FALSE]
     )
+  )
+)
+scd_detected_genes <- scd_detected_genes[!is.na(scd_detected_genes)]
+
+rpe_limma_de_icc <- rpe_limma_de_scd_significant[
+  Gene.symbol %in% scd_detected_genes
+]
+
+## Regression plots for selected genes, Figure 4ACE ####
+
+regp_genes <- c(
+    "VEGFA", "KDR", "BMP7", "BMPR2", "TNXB", "SDC4"
 )
 
-table(
-    unique(rpe_limma_de_scd_down) %in% unique(
-        unlist(
-            cci_scd_healthy[, c("LIGAND_1", "LIGAND_2", "RECEPTOR_1", "RECEPTOR_2", "RECEPTOR_3")]
-        )
-    ) | unique(rpe_limma_de_scd_down) %in% unique(
-        unlist(
-            cci_scd_amd[, c("LIGAND_1", "LIGAND_2", "RECEPTOR_1", "RECEPTOR_2", "RECEPTOR_3")]
-        )
+regp_genes_dt <- as.data.table(
+  pData(
+    featureData(
+      rpe_gset
     )
-)
+  )
+)[
+  Gene.symbol %in% c(
+    "VEGFA", "KDR", "BMP7", "BMPR2", "TNXB", "SDC4"
+  ),
+  c("Gene.symbol", "ID")
+]
 
-ba_final_up <- sort(unique(rpe_limma_de_scd_up)[
-    unique(rpe_limma_de_scd_up) %in% unique(
-        unlist(
-            cci_scd_healthy[, c("LIGAND_1", "LIGAND_2", "RECEPTOR_1", "RECEPTOR_2", "RECEPTOR_3")]
-        )
-    ) | unique(rpe_limma_de_scd_up) %in% unique(
-        unlist(
-            cci_scd_amd[, c("LIGAND_1", "LIGAND_2", "RECEPTOR_1", "RECEPTOR_2", "RECEPTOR_3")]
-        )
+regp_genes_dt <- regp_genes_dt[
+  order(Gene.symbol, ID)
+]
+regp_genes_dt[
+  ,
+  uniqueID := paste(
+    Gene.symbol,
+    ID,
+    sep = "_"
+  )
+]
+regp_genes_dt[
+  ,
+  ymax := c(
+    8, 6, 12, 12,
+    8, 10, 6,
+    10, 6,
+    12, 6,
+    12, 14, 6, 6, 6, 6,
+    12, 8, 8, 10
+  )
+]
+
+regp_results <- lapply(
+  regp_genes_dt$ID,
+  function(id) {
+    temp_data <- data.table(
+      age = rpe_gset$age,
+      expr = exprs(rpe_gset)[as.character(id), ]
     )
-])
-
-fwrite(
-    rpe_limma_de_scd_significant[Gene.symbol %in% ba_final_up][, -4],
-    "../../../../../deg_scd_up.csv"
-)
-
-ba_final_down <- sort(unique(rpe_limma_de_scd_down)[
-    unique(rpe_limma_de_scd_down) %in% unique(
-        unlist(
-            cci_scd_healthy[, c("LIGAND_1", "LIGAND_2", "RECEPTOR_1", "RECEPTOR_2", "RECEPTOR_3")]
-        )
-    ) | unique(rpe_limma_de_scd_down) %in% unique(
-        unlist(
-            cci_scd_amd[, c("LIGAND_1", "LIGAND_2", "RECEPTOR_1", "RECEPTOR_2", "RECEPTOR_3")]
-        )
+    temp_lm <- lm(
+      expr ~ age,
+      data = temp_data
     )
-])
+    pval <- summary(temp_lm)$coefficients[2, 4]
+    coef <- temp_lm$coefficients[[2]]
+    temp_p <- ggplot(
+      temp_data,
+      aes(
+        x = age,
+        y = expr
+      )
+    ) + geom_point(
+    ) + geom_smooth(
+      method = "lm"
+    ) + ylim(
+      0,
+      12
+      #regp_genes_dt[ID == id]$ymax
+    ) + ggtitle(
+      paste(
+        regp_genes_dt[ID == id]$Gene.symbol,
+        regp_genes_dt[ID == id]$ID
+      )
+    )
+    list(
+      coef = coef,
+      pval = pval,
+      plot = temp_p
+    )
+  }
+)
+names(regp_results) <- regp_genes_dt$uniqueID
 
-fwrite(
-    rpe_limma_de_scd_significant[Gene.symbol %in% ba_final_down][, -4],
-    "../../../../../deg_scd_down.csv"
+# manual visualization and selection
+
+rpe_limma_de_icc[Gene.symbol == "BMP7"]
+regp_results$BMP7_4447
+regp_results$BMP7_8282
+regp_results$BMP7_10756
+regp_results$BMP7_15328 #to select
+
+rpe_limma_de_icc[Gene.symbol == "BMPR2"]
+regp_results$BMPR2_24626
+regp_results$BMPR2_35882 #to select not sure
+regp_results$BMPR2_43844
+
+rpe_limma_de_icc[Gene.symbol == "KDR"]
+regp_results$KDR_5091
+regp_results$KDR_41403 #to select
+
+rpe_limma_de_icc[Gene.symbol == "SDC4"]
+regp_results$SDC4_5331 #to select
+regp_results$SDC4_24315
+
+rpe_limma_de_icc[Gene.symbol == "TNXB"]
+regp_results$TNXB_17215
+regp_results$TNXB_21280 #to select
+regp_results$TNXB_27052
+regp_results$TNXB_34185
+regp_results$TNXB_43275
+regp_results$TNXB_44221
+
+rpe_limma_de_icc[Gene.symbol == "VEGFA"]
+regp_results$VEGFA_10384
+regp_results$VEGFA_25811 #to select
+regp_results$VEGFA_27120
+regp_results$VEGFA_36140
+
+## Figure 4ACE ####
+
+## Figure 4BDF ####
+
+fig_4bdf <- VlnPlot(
+  amd_seurat,
+  features = regp_genes,
+  pt.size = 0,
+  ncol = 2
+)
+ggsave(
+  paste0(
+    path_results,
+    "images/D1_f4bdf.png"
+  ),
+  fig_4bdf,
+  width = 2000,
+  height = 3000,
+  units = "px"
 )
 
-ba_final_up %in% cci_cellchat_healthy$LIGAND_1
-ba_final_up %in% cci_cellchat_healthy$RECEPTOR_2
-
-## Subset aging genes by CellChat ####
-
-table(
-    cc_genes %in% unique(rpe_limma_de$Gene.symbol)
-)
-ba_cc <- rpe_limma_de[Gene.symbol %in% cc_genes,
-                 c("Gene.symbol", "logFC", "P.Value", "adj.P.Val")]
-ba_cc[, bh_value := p.adjust(P.Value, method = "BH")]
-ba_cc_significant <- ba_cc[bh_value <= 0.1 & abs(logFC) >= log2(1.5)/70]
-
-fwrite(
-    ba_cc_significant,
-    "../results/D1_bulk_aging_deg_cc.csv"
-)
-
+########## OLD stuff ###############
 ## Age regulated Ligand-receptor overlaping with scd results ####
 
-icc_ba <- copy(icc_scdiffcom$icc_detec_all@cci_table_detected)
 icc_ba[
     ,
     LIGAND_1_UP := ifelse(
@@ -343,15 +479,15 @@ icc_rpe_endo_genes <- unique(
 )
 icc_rpe_endo_genes <- icc_rpe_endo_genes[!is.na(icc_rpe_endo_genes)]
 
-rpe_limma_de_scd_significant_detected <- rpe_limma_de_scd_significant[Gene.symbol %in% icc_rpe_endo_genes]
+rpe_limma_de_scd_significant_detected <- rpe_limma_de_scd_significant[
+  Gene.symbol %in% icc_rpe_endo_genes
+]
 fwrite(
     rpe_limma_de_scd_significant_detected,
     "../results/D1_icc_rpe_endo_bulk_aging_detected.csv"
 )
 
 ## Subset aging genes by senescence ####
-
-
 
 table(
     senref_kasit_up$gene %in% unique(rpe_limma_de$Gene.symbol)
