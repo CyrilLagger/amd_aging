@@ -13,19 +13,20 @@
 LRI_common <- LRI_human$LRI_curated[grepl("CellChat", DATABASE)]$LRI
 
 process_cci_cellchat <- function(cc) {
+  cct <- copy(cc)
   convert_table <- scDiffCom:::CellChat_conversion_human
   genes_to_change <- convert_table[new != "remove"]
-  cc[, LIGAND_1 := sub(" - .*", "", interaction_name_2)]
-  cc[, temp := sub(".* - ", "", interaction_name_2)]
-  cc[, RECEPTOR_1 := ifelse(grepl("+", temp, fixed = TRUE),
+  cct[, LIGAND_1 := sub(" - .*", "", interaction_name_2)]
+  cct[, temp := sub(".* - ", "", interaction_name_2)]
+  cct[, RECEPTOR_1 := ifelse(grepl("+", temp, fixed = TRUE),
                             gsub(".*\\((.+)\\+.*", "\\1", temp), temp)]
-  cc[, RECEPTOR_2 := ifelse(grepl("+", temp, fixed = TRUE),
+  cct[, RECEPTOR_2 := ifelse(grepl("+", temp, fixed = TRUE),
                             gsub(".*\\+(.+)\\).*", "\\1", temp), NA)]
-  cc[, temp := NULL]
-  cc[, LIGAND_1 := gsub(" ", "", LIGAND_1)]
-  cc[, RECEPTOR_1 := gsub(" ", "", RECEPTOR_1)]
-  cc[, RECEPTOR_2 := gsub(" ", "", RECEPTOR_2)]
-  cc[genes_to_change,
+  cct[, temp := NULL]
+  cct[, LIGAND_1 := gsub(" ", "", LIGAND_1)]
+  cct[, RECEPTOR_1 := gsub(" ", "", RECEPTOR_1)]
+  cct[, RECEPTOR_2 := gsub(" ", "", RECEPTOR_2)]
+  cct[genes_to_change,
      `:=`(LIGAND_1 = new),
      on = "LIGAND_1==old"
   ][
@@ -37,7 +38,7 @@ process_cci_cellchat <- function(cc) {
     `:=`(RECEPTOR_2 = new),
     on = "RECEPTOR_2==old"
   ]
-  cc[
+  cct[
     ,
     LRI_1 := ifelse(
       is.na(RECEPTOR_2),
@@ -45,7 +46,7 @@ process_cci_cellchat <- function(cc) {
       paste(LIGAND_1, paste(RECEPTOR_1, RECEPTOR_2, sep = "_"), sep = ":")
     )
   ]
-  cc[
+  cct[
     ,
     LRI_2 := ifelse(
       is.na(RECEPTOR_2),
@@ -53,7 +54,7 @@ process_cci_cellchat <- function(cc) {
       paste(LIGAND_1, paste(RECEPTOR_2, RECEPTOR_1, sep = "_"), sep = ":")
     )
   ]
-  cc[
+  cct[
     ,
     LRI_3 := ifelse(
       is.na(RECEPTOR_2),
@@ -61,7 +62,7 @@ process_cci_cellchat <- function(cc) {
       paste(LIGAND_1, paste(RECEPTOR_2, RECEPTOR_1, sep = "_"), sep = ":")
     )
   ]
-  cc[
+  cct[
     ,
     LRI := ifelse(
       LRI_1 %in% LRI_human$LRI_curated$LRI,
@@ -77,7 +78,7 @@ process_cci_cellchat <- function(cc) {
       )
     )
   ]
-  cc[
+  cct[
     ,
     CCI := paste(
       paste(
@@ -89,7 +90,7 @@ process_cci_cellchat <- function(cc) {
       sep = "_"
     )
   ]
-  return(cc)
+  return(cct)
 }
 
 cci_cellchat_healthy_clean <- process_cci_cellchat(cci_cellchat_healthy)
@@ -1279,7 +1280,7 @@ netAnalysis_signalingRole_network(
   font.size = 12
 )
 
-## scDiffCom senescence heatmpa function ####
+## scDiffCom senescence heatmap function ####
 
 scd_heatmap_sen <- function(cci_dt, title.name) {
   scd_template <- CJ(
