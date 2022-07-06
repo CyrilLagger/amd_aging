@@ -15,6 +15,7 @@ rpe_gset <- getGEO(
   GSEMatrix = TRUE,
   AnnotGPL = TRUE
 )
+length(rpe_gset)
 rpe_gset <- rpe_gset[[1]]
 fvarLabels(rpe_gset) <- make.names(fvarLabels(rpe_gset))
 
@@ -82,30 +83,54 @@ rpe_gset$rin <- as.numeric(rpe_gset$`rna integrity number (rin):ch1`)
 rpe_gset$mac <- as.factor(rpe_gset$`tissue:ch1`)
 rpe_gset$disease <- as.factor(rpe_gset$`ocular disease:ch1`)
 
-## Differential expression analysis ####
+## Differential expression analysis on 96 healthy tissue ####
 
-rpe_design <- model.matrix(~ age + sex + mac + disease + 0, rpe_gset)
-rpe_fit <- lmFit(rpe_gset, rpe_design)
+rpe_eel <- which(rpe_sml == "0" | rpe_sml == "2")
+rpe_eml <- rpe_sml[rpe_eel]
+rpe_eeset <- rpe_gset[, rpe_eel]
+table(pData(phenoData(rpe_eeset))$characteristics_ch1)
+table(pData(phenoData(rpe_eeset))$disease)
+
+rpe_design <- model.matrix(~ age + sex + mac + 0, rpe_eeset)
+rpe_fit <- lmFit(rpe_eeset, rpe_design)
 rpe_fit <- eBayes(rpe_fit, 0.01)
 rpe_tT <- topTable(
   rpe_fit,
   adjust = "fdr",
   coef = "age",
   sort.by = "B",
-  number = Inf
+  number = 30000
 )
+setDT(rpe_tT)
 
 rpe_results <- decideTests(rpe_fit)
-vennDiagram(rpe_results, include = c("up", "down"))
 
-## Load pre-saved limma results ####
+fwrite(
+  rpe_tT,
+  paste0(
+    path_results,
+    "D1_limma_deg.csv"
+  )
+)
 
-rpe_limma_de <- fread(
+## Load and compare to pre-saved limma results ####
+
+rpe_limma_de <- copy(rpe_tT)
+
+rpe_limma_check <- fread(
   paste0(
     path_data,
     "D1_limma_data.csv"
   )
 )
+table(rpe_limma_de$ID %in%
+rpe_limma_check$ID)
+rpe_limma_check[
+  rpe_limma_de,
+  on = "ID",
+  B2 := i.B
+]
+cor(rpe_limma_check$B, rpe_limma_check$B2)
 
 ## Load scDiffCom and cellchat genes ####
 
@@ -218,7 +243,7 @@ table(
   rpe_limma_de_scd_significant$Gene.symbol
 )
 
-## Find DEG also parts of CCIs, Table 1 ####
+## Find DEG also parts of scDiffCom CCIs, Table 1 ####
 
 scd_cols_genes <- c(
   "LIGAND_1", "LIGAND_2", "RECEPTOR_1", "RECEPTOR_2", "RECEPTOR_3"
@@ -238,6 +263,140 @@ scd_detected_genes <- scd_detected_genes[!is.na(scd_detected_genes)]
 rpe_limma_de_icc <- rpe_limma_de_scd_significant[
   Gene.symbol %in% scd_detected_genes
 ]
+
+#add detected LRIs
+scd_lri_melt <- melt.data.table(
+  LRI_human$LRI_curated[
+    ,
+    c("LRI", scd_cols_genes),
+    with = FALSE
+  ],
+  id.vars = "LRI",
+  value.name = "gene"
+)
+scd_lri_melt <- na.omit(scd_lri_melt)
+rpe_limma_de_icc[
+  dcast.data.table(
+    unique(scd_lri_melt[, c("LRI", "gene")])[
+      LRI %in% c(cci_scd_healthy$LRI, cci_scd_amd$LRI)
+    ],
+    formula = gene ~ .,
+    value.var = "LRI",
+    fun.aggregate = function(i) {
+      paste(i, collapse = ",")
+    }
+  ),
+  on = "Gene.symbol==gene",
+  LRIs := i..
+]
+
+#add CellChat pathways
+
+process_cldb_cellchat <- function(cc) {
+  cct <- copy(cc)
+  convert_table <- scDiffCom:::CellChat_conversion_human
+  genes_to_change <- convert_table[new != "remove"]
+  cct[, LIGAND_1 := sub(" - .*", "", interaction_name_2)]
+  cct[, temp := sub(".* - ", "", interaction_name_2)]
+  cct[, RECEPTOR_1 := ifelse(grepl("+", temp, fixed = TRUE),
+                            gsub(".*\\((.+)\\+.*", "\\1", temp), temp)]
+  cct[, RECEPTOR_2 := ifelse(grepl("+", temp, fixed = TRUE),
+                            gsub(".*\\+(.+)\\).*", "\\1", temp), NA)]
+  cct[, temp := NULL]
+  cct[, LIGAND_1 := gsub(" ", "", LIGAND_1)]
+  cct[, RECEPTOR_1 := gsub(" ", "", RECEPTOR_1)]
+  cct[, RECEPTOR_2 := gsub(" ", "", RECEPTOR_2)]
+  cct[genes_to_change,
+     `:=`(LIGAND_1 = new),
+     on = "LIGAND_1==old"
+  ][
+    genes_to_change,
+    `:=`(RECEPTOR_1 = new),
+    on = "RECEPTOR_1==old"
+  ][
+    genes_to_change,
+    `:=`(RECEPTOR_2 = new),
+    on = "RECEPTOR_2==old"
+  ]
+  cct[
+    ,
+    LRI_1 := ifelse(
+      is.na(RECEPTOR_2),
+      paste(LIGAND_1, RECEPTOR_1, sep = ":"),
+      paste(LIGAND_1, paste(RECEPTOR_1, RECEPTOR_2, sep = "_"), sep = ":")
+    )
+  ]
+  cct[
+    ,
+    LRI_2 := ifelse(
+      is.na(RECEPTOR_2),
+      paste(LIGAND_1, RECEPTOR_1, sep = ":"),
+      paste(LIGAND_1, paste(RECEPTOR_2, RECEPTOR_1, sep = "_"), sep = ":")
+    )
+  ]
+  cct[
+    ,
+    LRI_3 := ifelse(
+      is.na(RECEPTOR_2),
+      paste(RECEPTOR_1, LIGAND_1, sep = ":"),
+      paste(LIGAND_1, paste(RECEPTOR_2, RECEPTOR_1, sep = "_"), sep = ":")
+    )
+  ]
+  cct[
+    ,
+    LRI := ifelse(
+      LRI_1 %in% LRI_human$LRI_curated$LRI,
+      LRI_1,
+      ifelse(
+        LRI_2 %in% LRI_human$LRI_curated$LRI,
+        LRI_2,
+        ifelse(
+          LRI_3 %in% LRI_human$LRI_curated$LRI,
+          LRI_3,
+          LRI_3
+        )
+      )
+    )
+  ]
+  return(cct)
+}
+cldb_clean <- process_cldb_cellchat(cldb)
+
+rpe_limma_de_pws <- unique(
+  rpe_limma_de_icc[, c("Gene.symbol", "LRIs")][
+    ,
+    c(LRI = strsplit(LRIs, ",")),
+    by = "Gene.symbol"
+  ][
+    cldb_clean,
+    on = "LRI",
+    pathway := i.pathway_name
+  ][, c("Gene.symbol", "pathway")]
+)
+rpe_limma_de_pws <- na.omit(rpe_limma_de_pws)
+rpe_limma_de_pws <- dcast.data.table(
+  rpe_limma_de_pws,
+  Gene.symbol ~ .,
+  value.var = "pathway",
+  fun.aggregate = function(i) {
+    paste(i, collapse = "_")
+  }
+)
+
+rpe_limma_de_icc[
+  rpe_limma_de_pws,
+  on = "Gene.symbol",
+  pathways := i..
+]
+#note: some pathways will be further annotated manually
+
+fwrite(
+  rpe_limma_de_icc,
+  paste0(
+    path_results,
+    "D1_t1_rpe_limma_de_icc.csv"
+  )
+)
 
 ## Regression plots for selected genes, Figure 4ACE ####
 
