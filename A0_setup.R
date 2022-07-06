@@ -25,6 +25,7 @@ library(ggpubr)
 library(cowplot)
 library(ComplexHeatmap)
 library(GEOquery)
+library(GSVA)
 
 ## Options ####
 
