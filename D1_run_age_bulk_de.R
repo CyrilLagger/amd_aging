@@ -572,6 +572,7 @@ fig_4ace <- plot_grid(
   ncol = 2
 )
 fig_4ace
+#ggsave
 
 ## Figure 4BDF ####
 
@@ -591,3 +592,85 @@ ggsave(
   height = 3000,
   units = "px"
 )
+
+## Score bulk samples with GSVA/ssGSEA senescence ####
+
+rpe_gsva_sen_up <- gsva(
+  rpe_gset,
+  list(
+    rpe_gset[
+      rpe_gset@featureData@data[["Gene.symbol"]] %in% senref_kasit_up$gene
+    ]@featureData@data[["ID"]]
+  ),
+  method = "ssgsea",
+  mx.diff = FALSE,
+  ssgsea.norm = TRUE,
+  tau = 0.25
+)
+
+rpe_gsva_sen_down <- gsva(
+  rpe_gset,
+  list(
+    rpe_gset[
+      rpe_gset@featureData@data[["Gene.symbol"]] %in% senref_kasit_down$gene
+    ]@featureData@data[["ID"]]
+  ),
+  method = "ssgsea",
+  mx.diff = FALSE,
+  ssgsea.norm = TRUE,
+  tau = 0.25
+)
+
+rpe_gsva_score_md <- data.table(
+  sample = colnames(rpe_gset),
+  age = rpe_gset$age,
+  sex = rpe_gset$sex,
+  mac = rpe_gset$mac,
+  disease = rpe_gset$disease,
+  sen_score = (rpe_gsva_sen_up@assayData[["exprs"]] -
+    rpe_gsva_sen_down@assayData[["exprs"]])[1, ],
+  amd_class = sub(
+    "amd classification: ",
+    "",
+    rpe_gset$characteristics_ch1.4
+  )
+)
+
+## Senescence score Figure 5CD ####
+
+ggplot(
+  rpe_gsva_score_md[disease == "normal"],
+  aes(
+    x = age,
+    y = sen_score
+  )
+) + geom_point(
+) + geom_smooth(
+  method = "lm"
+)
+cor(
+  rpe_gsva_score_md[disease == "normal"]$age,
+  rpe_gsva_score_md[disease == "normal"]$sen_score
+)
+
+ggpar(
+  ggboxplot(
+    rpe_gsva_score_md,
+    x = "amd_class",
+    y = "sen_score",
+    color = "disease",
+    palette = "jco",
+    xlab = "Condition",
+    ylab = "ssGSEA senescence score"
+  ) + stat_compare_means(
+    method = "anova",
+    #label = "p.signif",
+    #label.x.npc = 0.3,
+    #alternative = "two.sided",
+    #var.equal = FALSE
+  ),
+  legend.title = ""
+)
+
+table(rpe_gsva_score_md$amd_class)
+#GA, CNV
