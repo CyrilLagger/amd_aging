@@ -407,7 +407,7 @@ regp_genes <- c(
 regp_genes_dt <- as.data.table(
   pData(
     featureData(
-      rpe_gset
+      rpe_eeset
     )
   )
 )[
@@ -444,8 +444,8 @@ regp_results <- lapply(
   regp_genes_dt$ID,
   function(id) {
     temp_data <- data.table(
-      age = rpe_gset$age,
-      expr = exprs(rpe_gset)[as.character(id), ]
+      age = rpe_eeset$age,
+      expr = exprs(rpe_eeset)[as.character(id), ]
     )
     temp_lm <- lm(
       expr ~ age,
@@ -490,8 +490,8 @@ regp_results$BMP7_10756
 regp_results$BMP7_15328 #to select
 
 rpe_limma_de_icc[Gene.symbol == "BMPR2"]
-regp_results$BMPR2_24626
-regp_results$BMPR2_35882 #to select not sure
+regp_results$BMPR2_24626 #to select
+regp_results$BMPR2_35882
 regp_results$BMPR2_43844
 
 rpe_limma_de_icc[Gene.symbol == "KDR"]
@@ -516,7 +516,62 @@ regp_results$VEGFA_25811 #to select
 regp_results$VEGFA_27120
 regp_results$VEGFA_36140
 
+regp_genes_dt_sel <- regp_genes_dt[
+  ID %in% c(
+    "15328", "24626", "41403",
+    "5331", "21280", "25811"
+    )
+]
+
 ## Figure 4ACE ####
+
+fig_4ace <- plot_grid(
+  plotlist = lapply(
+    regp_genes,
+    function(gene) {
+      temp_data <- data.table(
+        age = rpe_eeset$age,
+        expr = exprs(rpe_eeset)[
+          as.character(regp_genes_dt_sel[Gene.symbol == gene]$ID),
+        ]
+      )
+      ggplot(
+        temp_data,
+        aes(
+          x = age,
+          y = expr
+        )
+      ) + geom_point(
+      ) + geom_smooth(
+        method = "lm"
+      ) + ylim(
+        0,
+        13
+      ) + labs(
+        x = "age [years]",
+        y = "log2(expression)",
+        title = paste0(
+          gene,
+          ": ",
+          "log2FC = ",
+          signif(
+            rpe_limma_de_icc[Gene.symbol == gene]$logFC,
+            3
+          ),
+          "/year, ",
+          "FDR = ",
+          signif(
+            rpe_limma_de_icc[Gene.symbol == gene]$bh_value,
+            3
+          )
+        )
+      ) + theme(
+      )
+    }
+  ),
+  ncol = 2
+)
+fig_4ace
 
 ## Figure 4BDF ####
 
