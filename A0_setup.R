@@ -36,7 +36,7 @@ plan(multicore, workers = 20)
 path_data <- "data/"
 path_results <- "results/"
 
-## Custom CellChat gnetAnalysis_signalingRole_heatmap functions #####
+## Custom CellChat netAnalysis_signalingRole_heatmap functions #####
 
 netAnalysis_signalingRole_heatmap_custom <- function(
   object,
@@ -222,7 +222,8 @@ netVisual_heatmap_custom <- function(
   slot.name = c("netP", "net"),
   color.use = NULL,
   color.heatmap = c("#2166ac","#b2182b"),
-  title.name = NULL, width = NULL,
+  title.name = NULL,
+  width = NULL,
   height = NULL,
   font.size = 8,
   font.size.title = 10,
