@@ -806,7 +806,8 @@ netAnalysis_signalingRole_network_custom <- function(
   font.size = 8,
   font.size.title = 10,
   cluster.rows = FALSE,
-  cluster.cols = FALSE
+  cluster.cols = FALSE,
+  condition_title = NULL
 ) {
   if (length(slot(object, slot.name)$centr) == 0) {
     stop("Please run `netAnalysis_computeCentrality`")
@@ -855,6 +856,7 @@ netAnalysis_signalingRole_network_custom <- function(
       column_names_gp = gpar(fontsize = font.size),
       width = unit(width, "cm"), height = unit(height, "cm"),
       column_title = paste0(
+        condition_title,
         names(centr[i]),
         " signaling pathway network"
       ),
