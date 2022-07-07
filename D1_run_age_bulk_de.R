@@ -550,29 +550,40 @@ fig_4ace <- plot_grid(
       ) + labs(
         x = "age [years]",
         y = "log2(expression)",
-        title = paste0(
-          gene,
-          ": ",
+        title = gene,
+        subtitle = paste0(
           "log2FC = ",
           signif(
             rpe_limma_de_icc[Gene.symbol == gene]$logFC,
-            3
+            2
           ),
           "/year, ",
           "FDR = ",
           signif(
             rpe_limma_de_icc[Gene.symbol == gene]$bh_value,
-            3
+            2
           )
         )
+      ) + theme_minimal(
       ) + theme(
+        plot.title = element_text(size = 16),
+        axis.text = element_text(size = 14),
+        axis.title = element_text(size = 16)
       )
     }
   ),
   ncol = 2
 )
-fig_4ace
-#ggsave
+ggsave(
+  paste0(
+    path_results,
+    "images/D1_f4ace.png"
+  ),
+  fig_4ace,
+  width = 2000,
+  height = 3000,
+  units = "px"
+)
 
 ## Figure 4BDF ####
 
@@ -581,7 +592,7 @@ fig_4bdf <- VlnPlot(
   features = regp_genes,
   pt.size = 0,
   ncol = 2
-)
+) & theme(axis.title.x = element_blank())
 ggsave(
   paste0(
     path_results,
@@ -638,7 +649,12 @@ rpe_gsva_score_md <- data.table(
 
 ## Senescence score Figure 5CD ####
 
-ggplot(
+rpe_gsva_aging_cor_test <- cor.test(
+  rpe_gsva_score_md[disease == "normal"]$age,
+  rpe_gsva_score_md[disease == "normal"]$sen_score
+)
+
+fig_5c <- ggplot(
   rpe_gsva_score_md[disease == "normal"],
   aes(
     x = age,
@@ -647,30 +663,122 @@ ggplot(
 ) + geom_point(
 ) + geom_smooth(
   method = "lm"
+) + ylim(
+  0,
+  4
+) + labs(
+  x = "age [years]",
+  y = "ssGSEA senescence score",
+  title = "Senescence vs age in healthy microarray RPE/choroid samples",
+  subtitle = paste0(
+    "Pearson's r = ",
+    signif(
+      rpe_gsva_aging_cor_test$estimate,
+      2
+    ),
+    ", ",
+    "p-value = ",
+    signif(
+      rpe_gsva_aging_cor_test$p.value,
+      2
+    )
+  )
+) + theme_minimal(
+) + theme(
+  plot.title = element_text(size = 15.5),
+  plot.subtitle = element_text(size = 14),
+  axis.text = element_text(size = 14),
+  axis.title = element_text(size = 16)
 )
-cor(
-  rpe_gsva_score_md[disease == "normal"]$age,
-  rpe_gsva_score_md[disease == "normal"]$sen_score
-)
-
-ggpar(
-  ggboxplot(
-    rpe_gsva_score_md,
-    x = "amd_class",
-    y = "sen_score",
-    color = "disease",
-    palette = "jco",
-    xlab = "Condition",
-    ylab = "ssGSEA senescence score"
-  ) + stat_compare_means(
-    method = "anova",
-    #label = "p.signif",
-    #label.x.npc = 0.3,
-    #alternative = "two.sided",
-    #var.equal = FALSE
+ggsave(
+  paste0(
+    path_results,
+    "images/B1_f5c.png"
   ),
-  legend.title = ""
+  fig_5c,
+  width = 2000,
+  height = 2000,
+  units = "px"
 )
 
-table(rpe_gsva_score_md$amd_class)
-#GA, CNV
+rpe_gsva_score_md[
+  ,
+  amd_class_name := ifelse(
+    amd_class == "normal",
+    "Normal",
+    ifelse(
+      amd_class == "GA",
+      "Geographic atrophy",
+      ifelse(
+        amd_class == "CNV",
+        "Wet AMD",
+        "other"
+      )
+    )
+  )
+]
+
+rpe_gsva_order <- rpe_gsva_score_md[
+  amd_class %in% c("normal", "CNV", "GA")
+][, c("sen_score", "amd_class_name")]
+rpe_gsva_order$amd_class_name <- factor(
+  rpe_gsva_order$amd_class_name,
+  level = c("Normal", "Geographic atrophy", "Wet AMD")
+)
+
+fig_5d <- ggpar(
+  ggboxplot(
+    rpe_gsva_order,
+    x = "amd_class_name",
+    y = "sen_score",
+    color = "amd_class_name",
+    palette = "jco",
+    xlab = "Condition on microarray RPE/choroid samples",
+    ylab = "ssGSEA senescence score",
+    add = "jitter",
+    legend = "none"
+  ) + stat_pvalue_manual(
+    rstatix::wilcox_test(
+      rpe_gsva_order,
+      sen_score ~ amd_class_name,
+      #comparisons = list(
+      #  c("Geographic atrophy", "Normal"),
+      #  c("Wet AMD", "Normal")
+      #)
+      ref.group = "Normal",
+    ) %>% rstatix::add_significance(
+      "p"
+    ) %>% rstatix::add_xy_position(
+      x = "amd_class_name"
+    ),
+    label = "Wilcoxon, p = {p}{p.signif}",
+    size = 5
+  )
+) + theme(
+  plot.title = element_text(size = 16),
+  axis.text = element_text(size = 14),
+  axis.title = element_text(size = 16)
+)
+ggsave(
+  paste0(
+    path_results,
+    "images/B1_f5d.png"
+  ),
+  fig_5d,
+  width = 2000,
+  height = 2000,
+  units = "px"
+)
+
+wilcox.test(
+  rpe_gsva_score_md[amd_class == "normal"]$sen_score,
+  rpe_gsva_score_md[amd_class == "GA"]$sen_score,
+  alternative = "two.sided",
+  var.equal = FALSE
+)
+wilcox.test(
+  rpe_gsva_score_md[amd_class == "normal"]$sen_score,
+  rpe_gsva_score_md[amd_class == "CNV"]$sen_score,
+  alternative = "two.sided",
+  var.equal = FALSE
+)

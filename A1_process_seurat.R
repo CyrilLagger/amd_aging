@@ -278,7 +278,7 @@ amd_fig1B[
 ]
 amd_fig1B
 
-## Figure 1C-D
+## Figure 1C-D ####
 
 amd_seurat$condition_abbr <- ifelse(
   amd_seurat$condition == "normal",

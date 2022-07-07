@@ -420,9 +420,22 @@ fig_5a <- FeaturePlot(
   features = "score_gsea_kasit_updown",
   cols = c("yellow", "steelblue")
 ) + ggtitle(
-  "ssGSEA senescence score"
+  "ssGSEA senescence score in RPE/choroid single cells"
+) + theme(
+  plot.title = element_text(size = 16),
+  axis.text = element_text(size = 14),
+  axis.title = element_text(size = 16)
 )
-fig_5a
+ggsave(
+  paste0(
+    path_results,
+    "images/B1_f5a.png"
+  ),
+  fig_5a,
+  width = 2000,
+  height = 2000,
+  units = "px"
+)
 
 ## Figure 5B ####
 
@@ -448,7 +461,7 @@ sd(amd_seurat[[]][
   amd_seurat$condition_abbr == "AMD",
 ]$score_gsea_kasit_updown)
 
-t.test(
+wilcox.test(
   amd_seurat[[]][
     amd_seurat$condition_abbr == "AMD",
   ]$score_gsea_kasit_updown,
@@ -464,23 +477,36 @@ fig_5b <- ggpar(
     amd_seurat[[]],
     x = "condition_abbr",
     y = "score_gsea_kasit_updown",
-    color = "condition_abbr",
-    palette = "jco",
-    xlab = "Condition",
-    ylab = "ssGSEA senescence score"
+    #color = "condition_abbr",
+    #palette = "jco",
+    xlab = "Condition on RPE/choroid single cells",
+    ylab = "ssGSEA senescence score",
+    add = "jitter",
+    legend = "none"
   ) + stat_compare_means(
-    method = "t.test",
+    method = "wilcox.test",
     #label = "p.signif",
     label.x.npc = 0.3,
+    label.y.npc = 1,
     alternative = "two.sided",
-    var.equal = FALSE
-  ),
-  legend.title = ""
+    var.equal = FALSE,
+    size = 5
+  )
+) + theme(
+  plot.title = element_text(size = 16),
+  axis.text = element_text(size = 14),
+  axis.title = element_text(size = 16)
 )
-
-## Figure 5C ####
-
-## Figure 5D ####
+ggsave(
+  paste0(
+    path_results,
+    "images/B1_f5b.png"
+  ),
+  fig_5b,
+  width = 2000,
+  height = 2000,
+  units = "px"
+)
 
 ## Supplementary Figure 5A ####
 

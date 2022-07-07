@@ -462,26 +462,30 @@ png(
     path_results,
     "images/C3_f2a.png"
   ),
-  width = 600
+  width = 800
 )
 draw(
-   netAnalysis_signalingRole_heatmap(
+   netAnalysis_signalingRole_heatmap_custom(
     cc_list[[1]],
     signaling = c("VEGF", "BMP", "PTN", "GDF", "GRN", "HGF"),
     pattern = "all",
-    width = 8,
-    height = 10,
+    width = 10,
+    height = 8,
     title = names(cc_list)[1],
-    color.heatmap = "OrRd"
+    color.heatmap = "OrRd",
+    font.size = 16,
+    font.size.title = 18
   ) +
-    netAnalysis_signalingRole_heatmap(
+    netAnalysis_signalingRole_heatmap_custom(
     cc_list[[2]],
     signaling = c("VEGF", "BMP", "PTN", "GDF", "GRN", "HGF"),
     pattern = "all",
-    width = 8,
-    height = 10,
+    width = 10,
+    height = 8,
     title = names(cc_list)[2],
-    color.heatmap = "OrRd"
+    color.heatmap = "OrRd",
+    font.size = 16,
+    font.size.title = 18
   ),
   ht_gap = unit(0.5, "cm")
 )
@@ -497,24 +501,25 @@ png(
   width = 800
 )
 draw(
-  netVisual_heatmap(
+  netVisual_heatmap_custom(
     cellchat_healthy,
     signaling = "VEGF",
     color.heatmap = "Reds",
     title.name = paste("VEGF signaling ", names(cc_list)[1]),
     width = 10,
-    height = 10,
-    font.size = 12
-  ) +
-    netVisual_heatmap(
-      cellchat_amd,
-      signaling = "VEGF",
-      color.heatmap = "Reds",
-      title.name = paste("VEGF signaling ", names(cc_list)[2]),
-      width = 10,
-      height = 10,
-      font.size = 12
-    ),
+    height = 8,
+    font.size = 16,
+    font.size.title = 18
+  ) + netVisual_heatmap_custom(
+    cellchat_amd,
+    signaling = "VEGF",
+    color.heatmap = "Reds",
+    title.name = paste("VEGF signaling ", names(cc_list)[2]),
+    width = 10,
+    height = 8,
+    font.size = 16,
+    font.size.title = 18
+  ),
   ht_gap = unit(0.5, "cm")
 )
 dev.off()
@@ -527,23 +532,25 @@ png(
   width = 800
 )
 draw(
-  netVisual_heatmap(
+  netVisual_heatmap_custom(
     cellchat_healthy,
     signaling = "BMP",
     color.heatmap = "Reds",
     title.name = paste("BMP signaling ", names(cc_list)[1]),
     width = 10,
-    height = 10,
-    font.size = 12
+    height = 8,
+    font.size = 16,
+    font.size.title = 18
   ) +
-    netVisual_heatmap(
+    netVisual_heatmap_custom(
       cellchat_amd,
       signaling = "BMP",
       color.heatmap = "Reds",
       title.name = paste("BMP signaling ", names(cc_list)[2]),
       width = 10,
-      height = 10,
-      font.size = 12
+    height = 8,
+    font.size = 16,
+    font.size.title = 18
     ),
   ht_gap = unit(0.5, "cm")
 )
@@ -600,29 +607,33 @@ png(
     path_results,
     "images/C3_f3a.png"
   ),
-  width = 600
+  width = 800
 )
 draw(
-  netAnalysis_signalingRole_heatmap(
+  netAnalysis_signalingRole_heatmap_custom(
     cc_list[[1]],
     signaling = c(
-      "COLLAGEN", "LAMININ", "FN1", "THBS", "TENASCIN", "VTN"),
+      "COLLAGEN", "LAMININ", "FN1", "THBS", "TENASCIN", "VTN"
+    ),
     pattern = "all",
-    width = 6,
-    height = 7,
+    width = 10,
+    height = 8,
     title = names(cc_list)[1],
-    color.heatmap = "OrRd"
-  ) +
-  netAnalysis_signalingRole_heatmap(
+    color.heatmap = "OrRd",
+    font.size = 16,
+    font.size.title = 18
+  ) + netAnalysis_signalingRole_heatmap_custom(
     cc_list[[2]],
     signaling =  c(
       "COLLAGEN", "LAMININ", "FN1", "THBS", "TENASCIN", "VTN"
     ),
     pattern = "all",
-    width = 6,
-    height = 7,
+    width = 10,
+    height = 8,
     title = names(cc_list)[2],
-    color.heatmap = "OrRd"
+    color.heatmap = "OrRd",
+    font.size = 16,
+    font.size.title = 18
   ),
   ht_gap = unit(0.5, "cm")
 )
@@ -638,23 +649,25 @@ png(
   width = 800
 )
 draw(
-  netVisual_heatmap(
+  netVisual_heatmap_custom(
     cellchat_healthy,
     signaling = "COLLAGEN",
     color.heatmap = "Reds",
     title.name = paste("COLLAGEN signaling ", names(cc_list)[1]),
     width = 10,
-    height = 10,
-    font.size = 12
-  ) + netVisual_heatmap(
-      cellchat_amd,
-      signaling = "COLLAGEN",
-      color.heatmap = "Reds",
-      title.name = paste("COLLAGEN signaling ", names(cc_list)[2]),
-      width = 10,
-      height = 10,
-      font.size = 12
-    ),
+    height = 8,
+    font.size = 16,
+    font.size.title = 18
+  ) + netVisual_heatmap_custom(
+    cellchat_amd,
+    signaling = "COLLAGEN",
+    color.heatmap = "Reds",
+    title.name = paste("COLLAGEN signaling ", names(cc_list)[2]),
+    width = 10,
+    height = 8,
+    font.size = 16,
+    font.size.title = 18
+  ),
   ht_gap = unit(0.5, "cm")
 )
 dev.off()
@@ -667,22 +680,24 @@ png(
   width = 800
 )
 draw(
-  netVisual_heatmap(
+  netVisual_heatmap_custom(
     cellchat_healthy,
     signaling = "THBS",
     color.heatmap = "Reds",
     title.name = paste("THBS signaling ", names(cc_list)[1]),
     width = 10,
-    height = 10,
-    font.size = 12
-  ) + netVisual_heatmap(
+    height = 8,
+    font.size = 16,
+    font.size.title = 18
+  ) + netVisual_heatmap_custom(
     cellchat_amd,
     signaling = "THBS",
     color.heatmap = "Reds",
     title.name = paste("THBS signaling ", names(cc_list)[2]),
     width = 10,
-    height = 10,
-    font.size = 12
+    height = 8,
+    font.size = 16,
+    font.size.title = 18
   ),
   ht_gap = unit(0.5, "cm")
 )
@@ -696,22 +711,24 @@ png(
   width = 800
 )
 draw(
-  netVisual_heatmap(
+  netVisual_heatmap_custom(
     cellchat_healthy,
     signaling = "TENASCIN",
     color.heatmap = "Reds",
     title.name = paste("TENASCIN signaling ", names(cc_list)[1]),
     width = 10,
-    height = 10,
-    font.size = 12
-  ) + netVisual_heatmap(
+    height = 8,
+    font.size = 16,
+    font.size.title = 18
+  ) + netVisual_heatmap_custom(
     cellchat_amd,
     signaling = "TENASCIN",
     color.heatmap = "Reds",
     title.name = paste("TENASCIN signaling ", names(cc_list)[2]),
     width = 10,
-    height = 10,
-    font.size = 12
+    height = 8,
+    font.size = 16,
+    font.size.title = 18
   ),
   ht_gap = unit(0.5, "cm")
 )
@@ -1217,68 +1234,149 @@ endoSen_receiver_pathways <- t(
 
 ## Cellchat Senescence network and centrality Figure 6AC ####
 
-netVisual_aggregate(
-  cellchat_sen,
-  signaling = "VEGF"
+png(
+  paste0(
+    path_results,
+    "images/C3_f6a1.png"
+  ),
+  width = 500
 )
-netVisual_heatmap(
+netVisual_aggregate_custom(
+  cellchat_sen,
+  signaling = "VEGF",
+  vertex.label.cex = 1.2
+)
+dev.off()
+png(
+  paste0(
+    path_results,
+    "images/C3_f6b1.png"
+  ),
+  width = 500
+)
+netVisual_aggregate_custom(
+  cellchat_sen,
+  signaling = "BMP",
+  vertex.label.cex = 1.2
+)
+dev.off()
+png(
+  paste0(
+    path_results,
+    "images/C3_f6c1.png"
+  ),
+  width = 500
+)
+netVisual_aggregate_custom(
+  cellchat_sen,
+  signaling = "TENASCIN",
+  vertex.label.cex = 1.2
+)
+dev.off()
+
+png(
+  paste0(
+    path_results,
+    "images/C3_f6a2.png"
+  ),
+  width = 500
+)
+netVisual_heatmap_custom(
   cellchat_sen,
   signaling = "VEGF",
   color.heatmap = "Reds",
   title.name = "VEGF signaling",
   width = 10,
-  height = 10,
-  font.size = 12
+  height = 8,
+  font.size = 16,
+  font.size.title = 18
 )
-netAnalysis_signalingRole_network(
-  cellchat_sen,
-  signaling = c("VEGF"),
-  width = 10,
-  height = 3,
-  font.size = 12
+dev.off()
+png(
+  paste0(
+    path_results,
+    "images/C3_f6b2.png"
+  ),
+  width = 500
 )
-
-netVisual_aggregate(
-  cellchat_sen,
-  signaling = "BMP"
-)
-netVisual_heatmap(
+netVisual_heatmap_custom(
   cellchat_sen,
   signaling = "BMP",
   color.heatmap = "Reds",
   title.name = "BMP signaling",
   width = 10,
-  height = 10,
-  font.size = 12
+  height = 8,
+  font.size = 16,
+  font.size.title = 18
 )
-netAnalysis_signalingRole_network(
-  cellchat_sen,
-  signaling = c("BMP"),
-  width = 10,
-  height = 3,
-  font.size = 12
+dev.off()
+png(
+  paste0(
+    path_results,
+    "images/C3_f6c2.png"
+  ),
+  width = 500
 )
-
-netVisual_aggregate(
-  cellchat_sen,
-  signaling = "TENASCIN"
-)
-netVisual_heatmap(
+netVisual_heatmap_custom(
   cellchat_sen,
   signaling = "TENASCIN",
   color.heatmap = "Reds",
   title.name = "TENASCIN signaling",
   width = 10,
-  height = 10,
-  font.size = 12
+  height = 8,
+  font.size = 16,
+  font.size.title = 18
 )
-netAnalysis_signalingRole_network(
+dev.off()
+
+png(
+  paste0(
+    path_results,
+    "images/C3_f6a3.png"
+  ),
+  width = 500
+)
+netAnalysis_signalingRole_network_custom(
+  cellchat_sen,
+  signaling = c("VEGF"),
+  width = 10,
+  height = 3,
+  font.size = 16,
+  font.size.title = 18
+)
+dev.off()
+png(
+  paste0(
+    path_results,
+    "images/C3_f6b3.png"
+  ),
+  width = 500
+)
+netAnalysis_signalingRole_network_custom(
+  cellchat_sen,
+  signaling = c("BMP"),
+  width = 10,
+  height = 3,
+  font.size = 16,
+  font.size.title = 18
+)
+dev.off()
+png(
+  paste0(
+    path_results,
+    "images/C3_f6c3.png"
+  ),
+  width = 500
+)
+netAnalysis_signalingRole_network_custom(
   cellchat_sen,
   signaling = c("TENASCIN"),
   width = 10,
   height = 3,
-  font.size = 12
+  font.size = 16,
+  font.size.title = 18
 )
+dev.off()
 
 ## scDiffCom senescence heatmap function ####
 
@@ -1376,7 +1474,7 @@ scd_heatmap_sen <- function(cci_dt, title.name) {
   )
 }
 
-### Supplementary Figure 6B-D #####
+## Supplementary Figure 6B-D #####
 
 png(
   paste0(
