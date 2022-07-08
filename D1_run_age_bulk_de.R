@@ -290,8 +290,36 @@ rpe_limma_de_icc[
   LRIs := i..
 ]
 
-#add CellChat pathways
+#add detected CCIs
+scd_cci_melt <- melt.data.table(
+  unique(
+    rbindlist(
+      list(
+        cci_scd_healthy[, c("CCI", "LRI", scd_cols_genes), with = FALSE],
+        cci_scd_amd[, c("CCI", "LRI", scd_cols_genes), with = FALSE]
+      )
+    )
+  ),
+  id.vars = c("CCI", "LRI"),
+  value.name = "gene"
+)
+scd_cci_melt <- na.omit(scd_cci_melt)
+rpe_limma_de_icc[
+  dcast.data.table(
+    unique(scd_cci_melt[, c("CCI", "gene")])[
+      CCI %in% c(cci_scd_healthy$CCI, cci_scd_amd$CCI)
+    ],
+    formula = gene ~ .,
+    value.var = "CCI",
+    fun.aggregate = function(i) {
+      paste(i, collapse = ",")
+    }
+  ),
+  on = "Gene.symbol==gene",
+  CCIs := i..
+]
 
+#add CellChat pathways
 process_cldb_cellchat <- function(cc) {
   cct <- copy(cc)
   convert_table <- scDiffCom:::CellChat_conversion_human
