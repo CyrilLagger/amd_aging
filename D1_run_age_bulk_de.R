@@ -418,6 +418,61 @@ rpe_limma_de_icc[
 ]
 #note: some pathways will be further annotated manually
 
+# automatic KEGG pathways retrieval
+KEGG_PW <- KEGGREST::keggList(
+  database = "pathway",
+  organism = "hsa"
+)
+KEGG_PW <- data.table(
+  "KEGG_ID" = names(KEGG_PW),
+  "KEGG_NAME" = KEGG_PW
+)
+KEGG_PW[
+  ,
+  KEGG_NAME := gsub(" - Homo sapiens (human)", "", KEGG_NAME, fixed = TRUE)
+]
+KEGG_PW_to_genes <- rbindlist(
+  l = lapply(
+    KEGG_PW$KEGG_ID,
+    function(id) {
+      temp <- KEGGREST::keggGet(
+        dbentries = id
+      )
+      temp <- temp[[1]]$GENE
+      temp <- temp[grepl(";", temp)]
+      temp <- sort(gsub(";.*", "", temp))
+      if (length(temp) > 0) {
+        result <- data.table(
+          GENE = temp,
+          KEGG_ID = id
+        )
+      } else {
+        result <- NULL
+      }
+      return(result)
+    }
+  )
+)
+KEGG_PW_to_genes[
+  KEGG_PW,
+  on = "KEGG_ID",
+  KEGG_NAME := i.KEGG_NAME
+]
+KEGG_PW_to_genes <- dcast.data.table(
+  KEGG_PW_to_genes,
+  GENE ~ .,
+  value.var = "KEGG_NAME",
+  fun.aggregate = function(i) {
+    paste(i, collapse = ",")
+  }
+)
+
+rpe_limma_de_icc[
+  KEGG_PW_to_genes,
+  on = "Gene.symbol==GENE",
+  KEGG_PWS := i..
+]
+
 fwrite(
   rpe_limma_de_icc,
   paste0(
@@ -425,6 +480,8 @@ fwrite(
     "D1_t1_rpe_limma_de_icc.csv"
   )
 )
+
+table(grepl("RPE", rpe_limma_de_icc$CCIs))
 
 ## Regression plots for selected genes, Figure 4ACE ####
 
