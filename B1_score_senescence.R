@@ -510,28 +510,65 @@ ggsave(
 
 ## Supplementary Figure 5A ####
 
-ggplot(
+sfig_5a <- ggplot(
   amd_seurat[[]],
   aes(
     x = score_gsea_kasit_updown
   )
 ) + geom_histogram(
   color = "blue",
-  bins = 70,
+  bins = 50,
   alpha = 0.3,
 ) + geom_vline(
   xintercept = quantile(amd_seurat$score_gsea_kasit_updown, 0.8)
 ) + xlab(
   "ssGSEA senescence score"
-) + facet_wrap(vars(cell_type))
+) + ylab(
+  "Number of cells"
+) + theme_minimal(
+) + facet_wrap(
+  vars(cell_type)
+) + theme(
+  plot.title = element_text(size = 16),
+  axis.text = element_text(size = 10),
+  axis.title = element_text(size = 16),
+  strip.text = element_text(size = 16)
+)
+ggsave(
+  paste0(
+    path_results,
+    "images/B1_sf5a.png"
+  ),
+  sfig_5a,
+  width = 2000,
+  height = 2000,
+  units = "px"
+)
 
 ## Supplementary Figure 5B ####
 
-DimPlot(
+sfig_5b <- DimPlot(
   amd_seurat,
   reduction = "umap",
   group.by = "is_senescent"
-) + ggtitle("")
+) + ggtitle(
+  "Classification of RPE/choroid single cells"
+) + theme(
+  plot.title = element_text(size = 16),
+  axis.text = element_text(size = 14),
+  axis.title = element_text(size = 16),
+  legend.text = element_text(size = 14)
+)
+ggsave(
+  paste0(
+    path_results,
+    "images/B1_sf5b.png"
+  ),
+  sfig_5b,
+  width = 2000,
+  height = 2000,
+  units = "px"
+)
 
 ## Table for Supplementary Figure 5C ####
 
@@ -548,14 +585,57 @@ ftable(
 
 ## Supplementary Figure 5D ####
 
-VlnPlot(
-  amd_seurat,
-  features = c(
-    "TP53", "CDKN1A", "RB1", "NFKB1", "NOTCH1"
+sfig_5d_list <- lapply(
+  VlnPlot(
+    amd_seurat,
+    features = c(
+      "TP53", "CDKN1A", "RB1", "NFKB1", "NOTCH1"
+    ),
+    group.by = "cell_type",
+    split.by = "is_senescent",
+    pt.size = 0,
+    combine = FALSE
   ),
-  group.by = "cell_type",
-  split.by = "is_senescent",
-  pt.size = 0
+  function(i) {
+    i + theme(
+      axis.text = element_text(size = 14),
+      axis.title = element_text(size = 16),
+      plot.title = element_text(size = 16),
+      plot.margin = unit(c(0.1, 0.1, 0, 0.1), "cm")
+    ) + xlab(
+      ""
+    ) + ylab(
+      "Expression level"
+    )
+  }
+)
+sfig_5d_legend <- get_legend(
+  sfig_5d_list[[1]] + theme(
+    legend.text = element_text(size = 18),
+    legend.position = c(0.3, 0.6)
+  )
+)
+sfig_5d <-  plot_grid(
+  plotlist = c(
+    lapply(
+      sfig_5d_list,
+      function(i) {
+        i + theme(legend.position = "none")
+      }
+    )
+  ),
+  sfig_5d_legend,
+  ncol = 3
+)
+ggsave(
+  paste0(
+    path_results,
+    "images/B1_sf5d.png"
+  ),
+  sfig_5d,
+  width = 3000,
+  height = 2000,
+  units = "px"
 )
 
 VlnPlot(

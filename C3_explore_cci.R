@@ -206,49 +206,42 @@ overlap_venn_healthy <- ggVennDiagram::process_data(
     )
   )
 )
-overlap_venn_healthy  <- ggplot() +
-  geom_sf(
-    aes(fill = count),
-    data = venn_region(overlap_venn_healthy),
-    show.legend = FALSE
-  ) +
-  geom_sf(
-    aes(color = name),
-    data = venn_setedge(overlap_venn_healthy),
-    show.legend = FALSE,
-    size = 2
-  ) +
-  geom_sf_text(
-    aes(label = name),
-    data = venn_setlabel(overlap_venn_healthy),
-    size = 6
-  ) +
-  geom_sf_label(
-    aes(
-      label = paste0(
-        count,
-        " (",
-        scales::percent(count / sum(count), accuracy = 2),
-        ")"
-      )
-    ),
-    data = venn_region(overlap_venn_healthy),
-    size = 6
-  ) +
-  scale_fill_gradient(
-    low = "#F4FAFE",
-    high = "#4981BF"
-  ) +
-  scale_color_manual(
-    values = c("CellChat" = "grey", "scDiffCom" = "grey")
-  ) +
-  theme_void() #+
-# ggtitle(
-#   "Normal"
-# ) +
-# theme(
-#   plot.title = element_text(size = 20)
-# )
+overlap_venn_healthy  <- ggplot(
+) + geom_sf(
+  aes(fill = count),
+  data = venn_region(overlap_venn_healthy),
+  show.legend = FALSE
+) + geom_sf(
+  aes(color = name),
+  data = venn_setedge(overlap_venn_healthy),
+  show.legend = FALSE,
+  size = 2
+) + geom_sf_text(
+  aes(label = name),
+  data = venn_setlabel(overlap_venn_healthy),
+  size = 6
+) + geom_sf_label(
+  aes(
+    label = paste0(
+      count,
+      " (",
+      scales::percent(count / sum(count), accuracy = 2),
+      ")"
+    )
+  ),
+  data = venn_region(overlap_venn_healthy),
+  size = 6
+) + scale_fill_gradient(
+  low = "#F4FAFE",
+  high = "#4981BF"
+) + scale_color_manual(
+  values = c("CellChat" = "grey", "scDiffCom" = "grey")
+) + theme_void(
+) + ggtitle(
+  "Detected CCIs on normal samples"
+) + theme(
+   plot.title = element_text(size = 20)
+)
 overlap_venn_healthy
 
 overlap_venn_amd <- ggVennDiagram::process_data(
@@ -261,49 +254,42 @@ overlap_venn_amd <- ggVennDiagram::process_data(
     )
   )
 )
-overlap_venn_amd  <- ggplot() +
-  geom_sf(
-    aes(fill = count),
-    data = venn_region(overlap_venn_amd),
-    show.legend = FALSE
-  ) +
-  geom_sf(
-    aes(color = name),
-    data = venn_setedge(overlap_venn_amd),
-    show.legend = FALSE,
-    size = 2
-  ) +
-  geom_sf_text(
-    aes(label = name),
-    data = venn_setlabel(overlap_venn_amd),
-    size = 6
-  ) +
-  geom_sf_label(
-    aes(
-      label = paste0(
-        count,
-        " (",
-        scales::percent(count / sum(count), accuracy = 2),
-        ")"
-      )
-    ),
-    data = venn_region(overlap_venn_amd),
-    size = 6
-  ) +
-  scale_fill_gradient(
-    low = "#F4FAFE",
-    high = "#4981BF"
-  ) +
-  scale_color_manual(
-    values = c("CellChat" = "grey", "scDiffCom" = "grey")
-  ) +
-  theme_void()# +
-# ggtitle(
-#   "AMD"
-# ) +
-# theme(
-#   plot.title = element_text(size = 20)
-#)
+overlap_venn_amd  <- ggplot(
+) + geom_sf(
+  aes(fill = count),
+  data = venn_region(overlap_venn_amd),
+  show.legend = FALSE
+) + geom_sf(
+  aes(color = name),
+  data = venn_setedge(overlap_venn_amd),
+  show.legend = FALSE,
+  size = 2
+) + geom_sf_text(
+  aes(label = name),
+  data = venn_setlabel(overlap_venn_amd),
+  size = 6
+) + geom_sf_label(
+  aes(
+    label = paste0(
+      count,
+      " (",
+      scales::percent(count / sum(count), accuracy = 2),
+      ")"
+    )
+  ),
+  data = venn_region(overlap_venn_amd),
+  size = 6
+) + scale_fill_gradient(
+  low = "#F4FAFE",
+  high = "#4981BF"
+) + scale_color_manual(
+  values = c("CellChat" = "grey", "scDiffCom" = "grey")
+) + theme_void(
+) + ggtitle(
+   "Detected CCIs on AMD samples"
+) + theme(
+   plot.title = element_text(size = 20)
+)
 overlap_venn_amd
 
 overlap_venn_combined <- ggVennDiagram::process_data(
@@ -320,62 +306,53 @@ overlap_venn_combined <- ggVennDiagram::process_data(
     )
   )
 )
-overlap_venn_combined  <- ggplot() +
-  geom_sf(
-    aes(fill = count),
-    data = venn_region(overlap_venn_combined),
-    show.legend = FALSE
-  ) +
-  geom_sf(
-    aes(color = name),
-    data = venn_setedge(overlap_venn_combined),
-    show.legend = FALSE,
-    size = 2
-  ) +
-  geom_sf_text(
-    aes(label = name),
-    data = venn_setlabel(overlap_venn_combined),
-    size = 6,
-    nudge_x = c(0.05, 0, 0, -0.05)
-  ) +
-  geom_sf_label(
-    aes(
-      label = paste0(
-        count,
-        " (",
-        scales::percent(count / sum(count), accuracy = 2),
-        ")"
-      )
-    ),
-    data = venn_region(overlap_venn_combined),
-    size = 5
-  ) +
-  scale_fill_gradient(
-    low = "#F4FAFE",
-    high = "#4981BF"
-  ) +
-  scale_color_manual(
-    values = c("CellChat" = "grey", "scDiffCom" = "grey")
-  ) +
-  theme_void()# +
-# ggtitle(
-#   "Overall"
-# ) +
-# theme(
-#   plot.title = element_text(size = 20)
-# )
+overlap_venn_combined  <- ggplot(
+) + geom_sf(
+  aes(fill = count),
+  data = venn_region(overlap_venn_combined),
+  show.legend = FALSE
+) + geom_sf(
+  aes(color = name),
+  data = venn_setedge(overlap_venn_combined),
+  show.legend = FALSE,
+  size = 2
+) + geom_sf_text(
+  aes(label = name),
+  data = venn_setlabel(overlap_venn_combined),
+  size = 6,
+  nudge_x = c(0.05, 0, 0, -0.05)
+) + geom_sf_label(
+  aes(
+    label = paste0(
+      count,
+      " (",
+      scales::percent(count / sum(count), accuracy = 2),
+      ")"
+    )
+  ),
+  data = venn_region(overlap_venn_combined),
+  size = 5
+) + scale_fill_gradient(
+  low = "#F4FAFE",
+  high = "#4981BF"
+) + scale_color_manual(
+  values = c("CellChat" = "grey", "scDiffCom" = "grey")
+) + theme_void(
+) + ggtitle(
+   "Detected CCIs"
+) + theme(
+   plot.title = element_text(size = 20)
+)
 overlap_venn_combined
 
 overlap_venn_grid <- plot_grid(
   plot_grid(
     overlap_venn_healthy,
     overlap_venn_amd,
-    ncol = 1,
-    labels = c("a - Normal", "b - AMD")
+    ncol = 1
   ),
   overlap_venn_combined,
-  ncol = 2,
-  labels = c("", "c - Overall")
+  ncol = 2
 )
 
 overlap_venn_title <- ggdraw() +
@@ -395,12 +372,13 @@ sf1 <- plot_grid(
   ncol = 1,
   rel_heights = c(0.1, 1)
 )
+
 ggsave(
   paste0(
     path_results,
     "images/C3_sf1.png"
   ),
-  sf1,
+  overlap_venn_grid,
   scale = 2
 )
 
@@ -570,6 +548,10 @@ sf2_pathways <- data.table(
   condition = c(
     "healthy", "amd", "healthy", "amd", "healthy", "amd",
     "healthy", "amd", "healthy", "amd", "healthy"
+  ),
+  condition_name = c(
+    "Normal", "AMD", "Normal", "AMD", "Normal", "AMD",
+    "Normal", "AMD", "Normal", "AMD", "Normal"
   )
 )
 
@@ -581,16 +563,20 @@ for (i in seq_len(nrow(sf2_pathways))) {
       sf2_pathways[i]$id,
       ".png"
     ),
-    width = 400,
-    height = 200
+    width = 410,
+    height = 210
   )
-  netAnalysis_signalingRole_network(
+  netAnalysis_signalingRole_network_custom(
     get(paste0("cellchat_", sf2_pathways[i]$condition)),
     signaling = sf2_pathways[i]$pw,
     width = 10,
     height = 3,
-    font.size = 14,
-    font.size.title = 15
+    font.size = 16,
+    font.size.title = 16,
+    condition_title = paste0(
+      sf2_pathways[i]$condition_name,
+      " - "
+    )
   )
   dev.off()
 }
@@ -848,7 +834,7 @@ tenascin_pathway <- LRI_human$LRI_curated[
   #RECEPTOR_3 %in% cldb[pathway_name == "TENASCIN"]$receptor
 ]
 
-## scDiffCom heatmaps function ####
+## scDiffCom heatmap function ####
 
 scd_heatmap <- function(cci_dt, title.name) {
   scd_template <- CJ(
@@ -900,15 +886,35 @@ scd_heatmap <- function(cci_dt, title.name) {
     simple_anno_size = grid::unit(0.2, "cm")
   )
   ha1 <- rowAnnotation(
-    Strength = anno_barplot(rowSums(abs(mat)),
-    border = FALSE,
-    gp = gpar(fill = color.use, col = color.use)),
+    Strength = anno_barplot(
+      rowSums(abs(mat)),
+      border = FALSE,
+      gp = gpar(fill = color.use, col = color.use),
+      axis_param = list(
+        at = c(
+          0,
+          signif(max(rowSums(abs(mat))), 1) / 2,
+          signif(max(rowSums(abs(mat))), 1)
+        ),
+        gp = gpar(fontsize = 10)
+      )
+    ),
     show_annotation_name = FALSE
   )
   ha2 <- HeatmapAnnotation(
-    Strength = anno_barplot(colSums(abs(mat)),
-    border = FALSE,
-    gp = gpar(fill = color.use, col = color.use)),
+    Strength = anno_barplot(
+      colSums(abs(mat)),
+      border = FALSE,
+      gp = gpar(fill = color.use, col = color.use),
+      axis_param = list(
+        at = c(
+          0,
+          signif(max(colSums(abs(mat))), 1) / 2,
+          signif(max(colSums(abs(mat))), 1)
+        ),
+        gp = gpar(fontsize = 10)
+      )
+    ),
     show_annotation_name = FALSE
   )
   mat[mat == 0] <- NA
@@ -925,20 +931,20 @@ scd_heatmap <- function(cci_dt, title.name) {
     cluster_columns = FALSE,
     row_names_side = "left",
     row_names_rot = 0,
-    row_names_gp = gpar(fontsize = 10),
-    column_names_gp = gpar(fontsize = 10),
+    row_names_gp = gpar(fontsize = 16),
+    column_names_gp = gpar(fontsize = 16),
     column_title = title.name,
-    column_title_gp = gpar(fontsize = 10),
+    column_title_gp = gpar(fontsize = 18),
     column_names_rot = 90,
     row_title = "Sources (Sender)",
-    row_title_gp = gpar(fontsize = 10),
+    row_title_gp = gpar(fontsize = 18),
     row_title_rot = 90,
     heatmap_legend_param = list(
-      title_gp = gpar(fontsize = 8, fontface = "plain"),
+      title_gp = gpar(fontsize = 14, fontface = "plain"),
       title_position = "leftcenter-rot",
       border = NA, #at = colorbar.break,
-      legend_height = unit(20, "mm"),
-      labels_gp = gpar(fontsize = 8),
+      legend_height = unit(40, "mm"),
+      labels_gp = gpar(fontsize = 18),
       grid_width = unit(2, "mm")
     )
   )
@@ -1145,12 +1151,19 @@ overlap_venn_sen  <- ggplot() +
   ) +
   theme_void() +
   ggtitle(
-    "Detected CCIs"
+    "Detected CCIs across normal and senescent-like cell types"
   ) +
   theme(
     plot.title = element_text(size = 20)
   )
-overlap_venn_sen
+ggsave(
+  paste0(
+    path_results,
+    "images/C3_sf6a.png"
+  ),
+  overlap_venn_sen,
+  scale = 1
+)
 
 ## Find dominant pathways including senescence cell types #####
 
@@ -1430,15 +1443,35 @@ scd_heatmap_sen <- function(cci_dt, title.name) {
     simple_anno_size = grid::unit(0.2, "cm")
   )
   ha1 <- rowAnnotation(
-    Strength = anno_barplot(rowSums(abs(mat)),
-    border = FALSE,
-    gp = gpar(fill = color.use, col = color.use)),
+    Strength = anno_barplot(
+      rowSums(abs(mat)),
+      border = FALSE,
+      gp = gpar(fill = color.use, col = color.use),
+      axis_param = list(
+        at = c(
+          0,
+          signif(max(rowSums(abs(mat))), 1) / 2,
+          signif(max(rowSums(abs(mat))), 1)
+        ),
+        gp = gpar(fontsize = 10)
+      )
+    ),
     show_annotation_name = FALSE
   )
   ha2 <- HeatmapAnnotation(
-    Strength = anno_barplot(colSums(abs(mat)),
-    border = FALSE,
-    gp = gpar(fill = color.use, col = color.use)),
+    Strength = anno_barplot(
+      colSums(abs(mat)),
+      border = FALSE,
+      gp = gpar(fill = color.use, col = color.use),
+      axis_param = list(
+        at = c(
+          0,
+          signif(max(colSums(abs(mat))), 1) / 2,
+          signif(max(colSums(abs(mat))), 1)
+        ),
+        gp = gpar(fontsize = 10)
+      )
+    ),
     show_annotation_name = FALSE
   )
   mat[mat == 0] <- NA
@@ -1455,20 +1488,20 @@ scd_heatmap_sen <- function(cci_dt, title.name) {
     cluster_columns = FALSE,
     row_names_side = "left",
     row_names_rot = 0,
-    row_names_gp = gpar(fontsize = 10),
-    column_names_gp = gpar(fontsize = 10),
+    row_names_gp = gpar(fontsize = 16),
+    column_names_gp = gpar(fontsize = 16),
     column_title = title.name,
-    column_title_gp = gpar(fontsize = 10),
+    column_title_gp = gpar(fontsize = 18),
     column_names_rot = 90,
     row_title = "Sources (Sender)",
-    row_title_gp = gpar(fontsize = 10),
+    row_title_gp = gpar(fontsize = 18),
     row_title_rot = 90,
     heatmap_legend_param = list(
-      title_gp = gpar(fontsize = 8, fontface = "plain"),
+      title_gp = gpar(fontsize = 14, fontface = "plain"),
       title_position = "leftcenter-rot",
       border = NA, #at = colorbar.break,
-      legend_height = unit(20, "mm"),
-      labels_gp = gpar(fontsize = 8),
+      legend_height = unit(40, "mm"),
+      labels_gp = gpar(fontsize = 18),
       grid_width = unit(2, "mm")
     )
   )
@@ -1481,7 +1514,7 @@ png(
     path_results,
     "images/C3_sf6b.png"
   ),
-  width = 800
+  width = 600
 )
 scd_heatmap_sen(
   cci_scd_sen[LRI %in% vegf_pathway2$LRI],
@@ -1494,7 +1527,7 @@ png(
     path_results,
     "images/C3_sf6c.png"
   ),
-  width = 800
+  width = 600
 )
 scd_heatmap_sen(
   cci_scd_sen[LRI %in% bmp_pathway$LRI],
@@ -1507,7 +1540,7 @@ png(
     path_results,
     "images/C3_sf6d.png"
   ),
-  width = 800
+  width = 600
 )
 scd_heatmap_sen(
   cci_scd_sen[LRI %in% tenascin_pathway$LRI],
