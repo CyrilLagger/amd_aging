@@ -422,7 +422,7 @@ fig_5a <- FeaturePlot(
 ) + ggtitle(
   "ssGSEA senescence score in RPE/choroid single cells"
 ) + theme(
-  plot.title = element_text(size = 16),
+  plot.title = element_text(size = 16, face = "plain"),
   axis.text = element_text(size = 14),
   axis.title = element_text(size = 16)
 )
