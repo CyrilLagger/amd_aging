@@ -749,8 +749,7 @@ fig_5c <- ggplot(
 ) + geom_smooth(
   method = "lm"
 ) + ylim(
-  0,
-  4
+  c(3, 4)
 ) + labs(
   x = "age [years]",
   y = "ssGSEA senescence score",
@@ -768,9 +767,12 @@ fig_5c <- ggplot(
       2
     )
   )
+#) + ggbreak::scale_y_break(
+#  c(1, 3),
+#  space = 1
 ) + theme_minimal(
 ) + theme(
-  plot.title = element_text(size = 15.5),
+  plot.title = element_text(size = 15),
   plot.subtitle = element_text(size = 14),
   axis.text = element_text(size = 14),
   axis.title = element_text(size = 16)
@@ -826,11 +828,12 @@ fig_5d <- ggpar(
     rstatix::wilcox_test(
       rpe_gsva_order,
       sen_score ~ amd_class_name,
-      #comparisons = list(
-      #  c("Geographic atrophy", "Normal"),
-      #  c("Wet AMD", "Normal")
-      #)
-      ref.group = "Normal",
+      comparisons = list(
+        c("Geographic atrophy", "Wet AMD"),
+        c("Geographic atrophy", "Normal"),
+        c("Wet AMD", "Normal")        
+      )
+      #ref.group = "Normal",
     ) %>% rstatix::add_significance(
       "p"
     ) %>% rstatix::add_xy_position(
@@ -863,6 +866,12 @@ wilcox.test(
 )
 wilcox.test(
   rpe_gsva_score_md[amd_class == "normal"]$sen_score,
+  rpe_gsva_score_md[amd_class == "CNV"]$sen_score,
+  alternative = "two.sided",
+  var.equal = FALSE
+)
+wilcox.test(
+  rpe_gsva_score_md[amd_class == "GA"]$sen_score,
   rpe_gsva_score_md[amd_class == "CNV"]$sen_score,
   alternative = "two.sided",
   var.equal = FALSE
