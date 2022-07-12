@@ -11,7 +11,7 @@
 ## Create Seurat object #####
 
 # We read the Seurat object retrieved from the galaxy portal and
-# and extract read counts and metadata. As it is unclear how this object
+# extract read counts and metadata. As it is unclear how this object
 # has been originally processed, we process it again following the
 # standard Seurat workflow. Importantly, gene names need to be
 # standardized.
