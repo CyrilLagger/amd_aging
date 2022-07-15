@@ -473,6 +473,42 @@ rpe_limma_de_icc[
   KEGG_PWS := i..
 ]
 
+#add if ligand or receptor
+rpe_limma_de_icc[
+  ,
+  gene_type := ifelse(
+    Gene.symbol %in% intersect(
+      scd_lri_melt[grepl("LIGAND", variable)]$gene,
+      scd_lri_melt[grepl("RECEPTOR", variable)]$gene
+    ),
+    "Ligand/Receptor",
+    ifelse(
+      Gene.symbol %in% scd_lri_melt[grepl("LIGAND", variable)]$gene,
+      "Ligand",
+      ifelse(
+        Gene.symbol %in% scd_lri_melt[grepl("RECEPTOR", variable)]$gene,
+        "Receptor",
+        "None"
+      )
+    )
+  )
+]
+table(rpe_limma_de_icc$gene_type)
+
+#add if from or to the RPE
+rpe_limma_de_icc[
+  ,
+  from_rpe := grepl("^RPE_", CCIs) | grepl("\\,RPE_", CCIs)
+]
+rpe_limma_de_icc[
+  ,
+  to_rpe := grepl("_RPE_", CCIs)
+]
+table(
+  rpe_limma_de_icc$from_rpe,
+  rpe_limma_de_icc$to_rpe
+)
+
 fwrite(
   rpe_limma_de_icc,
   paste0(
